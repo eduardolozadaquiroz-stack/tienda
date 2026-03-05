@@ -1,0 +1,40 @@
+# Dependencias
+node_modules/
+.npm
+
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Uploads generados (fotos de usuarios, facturas, etc.)
+backend/uploads/avatars/*
+backend/uploads/facturas/*
+backend/uploads/galeria/*
+backend/uploads/productos/*
+backend/uploads/diseños/*
+# Mantener las carpetas vacías
+!backend/uploads/avatars/.gitkeep
+!backend/uploads/facturas/.gitkeep
+!backend/uploads/galeria/.gitkeep
+!backend/uploads/productos/.gitkeep
+!backend/uploads/diseños/.gitkeep
+
+# Build de Vue
+comercio/dist/
+panel/dist/
+
+# JS/CSS vendorizados (librerías de terceros con posibles tokens)
+panel/public/assets/js/
+panel/public/assets/css/
+comercio/public/assets/js/
+comercio/public/assets/css/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/settings.json
+.DS_Store
+Thumbs.db
