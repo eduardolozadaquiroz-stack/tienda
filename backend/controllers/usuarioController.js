@@ -4,11 +4,27 @@ const bcrypt = require('bcrypt');
 var jwt = require('../helpers/jwt');
 var fs = require('fs');
 var path = require('path');
+var cloudinaryHelper = require('../helpers/cloudinary');
+var logger = require('../helpers/logger');
+
+// Escapa caracteres especiales de RegExp para evitar Injection (OWASP #3)
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 
+
+// Roles permitidos — OWASP #1 (Control de acceso)
+const ROLES_VALIDOS = ['admin', 'vendedor', 'almacen'];
 
 const registro_usuario_admin = async function(req, res) {
     if (req.user) {
+        // OWASP #1: solo un admin puede crear usuarios
+        if (req.user.rol !== 'admin') {
+            logger.accessDenied(req, 'registro_usuario_admin');
+            return res.status(403).send({ data: undefined, message: 'No tienes permisos para realizar esta acción.' });
+        }
+
         let data = req.body;
 
         // Validación mínima de campos requeridos
@@ -16,14 +32,25 @@ const registro_usuario_admin = async function(req, res) {
             return res.status(400).send({ data: undefined, message: 'Todos los campos son obligatorios.' });
         }
 
+        // OWASP #1: validar que el rol asignado sea válido
+        if (!ROLES_VALIDOS.includes(data.rol)) {
+            return res.status(400).send({ data: undefined, message: 'Rol no válido.' });
+        }
+
+        // Normalizar email (OWASP #3)
+        data.email = data.email.trim().toLowerCase();
+
         let usuarios = await Usuario.find({ email: data.email });
 
         if (usuarios.length >= 1) {
             res.status(200).send({ data: undefined, message: 'El correo electrónico ya existe' });
         } else {
             try {
-                const hash = await bcrypt.hash('123456', 10);
+                // OWASP #4: no usar contraseña temporal fija. Generar una temporal aleatoria.
+                const tempPassword = require('crypto').randomBytes(10).toString('hex');
+                const hash = await bcrypt.hash(tempPassword, 12);
                 data.password = hash;
+                // TODO: enviar tempPassword por correo al nuevo usuario
                 let usuario = await Usuario.create(data);
                 // Nunca devolver el hash al frontend
                 const { password: _, ...usuarioSafe } = usuario.toObject();
@@ -37,6 +64,9 @@ const registro_usuario_admin = async function(req, res) {
     }
 }
 
+const MAX_INTENTOS = 5;
+const BLOQUEO_MS = 30 * 60 * 1000; // 30 minutos
+
 const login_usuario = async function(req, res) {
     var data = req.body;
 
@@ -44,31 +74,57 @@ const login_usuario = async function(req, res) {
         return res.status(400).send({ data: undefined, message: 'Email y contraseña son requeridos.' });
     }
 
+    // Normalizar email (OWASP #3)
+    data.email = data.email.trim().toLowerCase();
+
     try {
-        // Seleccionamos +password explícitamente porque el modelo tiene select:false
-        var usuarios = await Usuario.find({ email: data.email }).select('+password');
+        var usuarios = await Usuario.find({ email: data.email })
+            .select('+password +login_intentos +login_bloqueado_hasta');
 
         if (usuarios.length >= 1) {
-            if (usuarios[0].estado) {
-                const match = await bcrypt.compare(data.password, usuarios[0].password);
+            const usuario = usuarios[0];
+
+            // Verificar bloqueo temporal por intentos fallidos
+            if (usuario.login_bloqueado_hasta && usuario.login_bloqueado_hasta > new Date()) {
+                const minutos = Math.ceil((usuario.login_bloqueado_hasta - new Date()) / 60000);
+                logger.security('ACCOUNT_LOCKED_ATTEMPT', { ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress, email: data.email });
+                return res.status(429).send({ data: undefined, message: `Cuenta bloqueada temporalmente. Intenta en ${minutos} minuto(s).` });
+            }
+
+            if (usuario.estado) {
+                const match = await bcrypt.compare(data.password, usuario.password);
 
                 if (match) {
-                    // Eliminar el hash de la respuesta
-                    const { password: _, ...usuarioSafe } = usuarios[0].toObject();
+                    // Resetear contador de intentos al login exitoso
+                    await Usuario.findByIdAndUpdate(usuario._id, { login_intentos: 0, login_bloqueado_hasta: null });
+                    const { password: _, login_intentos: __, login_bloqueado_hasta: ___, ...usuarioSafe } = usuario.toObject();
+                    logger.loginOk(req, usuario._id, usuario.rol);
                     res.status(200).send({
-                        token: jwt.createToken(usuarios[0]),
+                        token: jwt.createToken(usuario),
                         usuario: usuarioSafe
                     });
                 } else {
-                    res.status(401).send({ data: undefined, message: 'La contraseña es incorrecta.' });
+                    // Incrementar contador — bloquear si llega al máximo
+                    const intentos = (usuario.login_intentos || 0) + 1;
+                    const update = { login_intentos: intentos };
+                    if (intentos >= MAX_INTENTOS) {
+                        update.login_bloqueado_hasta = new Date(Date.now() + BLOQUEO_MS);
+                        logger.security('ACCOUNT_LOCKED', { email: data.email, intentos });
+                    }
+                    await Usuario.findByIdAndUpdate(usuario._id, update);
+                    logger.loginFail(req, data.email);
+                    res.status(401).send({ data: undefined, message: 'Credenciales incorrectas.' });
                 }
             } else {
+                logger.loginFail(req, data.email);
                 res.status(403).send({ data: undefined, message: 'Su cuenta está desactivada.' });
             }
         } else {
-            res.status(401).send({ data: undefined, message: 'No se encontró el correo electrónico.' });
+            logger.loginFail(req, data.email);
+            res.status(401).send({ data: undefined, message: 'Credenciales incorrectas.' });
         }
     } catch (error) {
+        logger.error('LOGIN_ERROR', { error: error.message });
         res.status(500).send({ data: undefined, message: 'Error interno del servidor.' });
     }
 }
@@ -76,14 +132,16 @@ const login_usuario = async function(req, res) {
 
 const listar_usuario_admin = async function(req, res) {
     if (req.user) {
-        let filtro = req.params['filtro'];
+        let filtro = req.params['filtro'] || '';
 
         try {
+            // OWASP #3: escapar input antes de usarlo en RegExp
+            const safeFilter = escapeRegex(filtro.trim());
             let usuarios = await Usuario.find({
                 $or: [
-                    { nombres: new RegExp(filtro, 'i') },
-                    { apellidos: new RegExp(filtro, 'i') },
-                    { email: new RegExp(filtro, 'i') },
+                    { nombres: new RegExp(safeFilter, 'i') },
+                    { apellidos: new RegExp(safeFilter, 'i') },
+                    { email: new RegExp(safeFilter, 'i') },
                 ]
             });
             res.status(200).send(usuarios);
@@ -138,16 +196,27 @@ const actualizar_usuario_admin = async function(req, res) {
 
 const cambiar_password_usuario_admin = async function(req, res) {
     if (req.user) {
+        // OWASP #1: solo admin puede cambiar contraseña de otro usuario
+        if (req.user.rol !== 'admin') {
+            logger.accessDenied(req, `cambiar_password_usuario/${req.params['id']}`);
+            return res.status(403).send({ data: undefined, message: 'No tienes permisos para realizar esta acción.' });
+        }
         let id = req.params['id'];
         let data = req.body;
 
-        if (!data.password || data.password.length < 6) {
-            return res.status(200).send({ data: undefined, message: 'La contraseña debe tener al menos 6 caracteres' });
+        // OWASP #4 + #7: política de contraseña segura
+        if (!data.password || data.password.length < 8 ||
+            !/[A-Z]/.test(data.password) ||
+            !/[a-z]/.test(data.password) ||
+            !/[0-9]/.test(data.password)) {
+            return res.status(400).send({ data: undefined, message: 'La contraseña debe tener mínimo 8 caracteres, una mayúscula, una minúscula y un número.' });
         }
 
         try {
-            const hash = await bcrypt.hash(data.password, 10);
+            // OWASP #2: bcrypt con factor 12 (más seguro que 10)
+            const hash = await bcrypt.hash(data.password, 12);
             await Usuario.findByIdAndUpdate({ _id: id }, { password: hash });
+            logger.security('PASSWORD_CHANGED', { adminId: req.user.sub, targetId: id });
             res.status(200).send({ message: 'Contraseña actualizada correctamente' });
         } catch (error) {
             res.status(500).send({ data: undefined, message: 'Error interno del servidor.' });
@@ -195,11 +264,16 @@ const subir_avatar_usuario_admin = async function(req, res) {
             // Eliminar avatar anterior si existe
             const usuarioActual = await Usuario.findById(id);
             if (usuarioActual && usuarioActual.avatar) {
-                const rutaAnterior = './uploads/avatars/' + usuarioActual.avatar;
-                if (fs.existsSync(rutaAnterior)) fs.unlinkSync(rutaAnterior);
+                if (usuarioActual.avatar.startsWith('http')) {
+                    await cloudinaryHelper.deleteByUrl(usuarioActual.avatar);
+                } else {
+                    const rutaAnterior = './uploads/avatars/' + usuarioActual.avatar;
+                    if (fs.existsSync(rutaAnterior)) fs.unlinkSync(rutaAnterior);
+                }
             }
-            await Usuario.findByIdAndUpdate({ _id: id }, { avatar: req.file.filename });
-            res.status(200).send({ avatar: req.file.filename });
+            const uploadResult = await cloudinaryHelper.uploadBuffer(req.file.buffer, 'avatars');
+            await Usuario.findByIdAndUpdate({ _id: id }, { avatar: uploadResult.secure_url });
+            res.status(200).send({ avatar: uploadResult.secure_url });
         } catch (error) {
             res.status(500).send({ data: undefined, message: 'Error al subir la imagen' });
         }
@@ -210,7 +284,25 @@ const subir_avatar_usuario_admin = async function(req, res) {
 
 const obtener_avatar_usuario = function(req, res) {
     let img = req.params['img'];
-    let pathImg = './uploads/avatars/' + img;
+
+    // OWASP #10: validar URL de Cloudinary antes de redirigir
+    if (img && img.startsWith('http')) {
+        try {
+            const decoded = decodeURIComponent(img);
+            const parsed = new URL(decoded);
+            const allowed = ['res.cloudinary.com', 'cloudinary.com'];
+            if (!allowed.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
+                return res.status(400).send({ message: 'URL no permitida.' });
+            }
+            return res.redirect(302, decoded);
+        } catch (_) {
+            return res.status(400).send({ message: 'URL no válida.' });
+        }
+    }
+
+    // OWASP #5: evitar path traversal en archivos locales
+    const safeName = require('path').basename(img);
+    let pathImg = './uploads/avatars/' + safeName;
     fs.stat(pathImg, function(err) {
         if (err) {
             res.status(200).sendFile(path.resolve('./uploads/default.jpg'));
@@ -224,7 +316,8 @@ const buscar_global_admin = async function(req, res) {
     if (req.user) {
         const q = req.params['q'] || '';
         if (!q || q.trim().length < 2) return res.status(200).send({ usuarios: [], productos: [] });
-        const regex = new RegExp(q.trim(), 'i');
+        // OWASP #3: escapar input antes de construir RegExp
+        const regex = new RegExp(escapeRegex(q.trim()), 'i');
         const usuarios = await Usuario.find({
             $or: [{ nombres: regex }, { apellidos: regex }, { email: regex }]
         }).select('nombres apellidos email rol estado avatar').limit(6);

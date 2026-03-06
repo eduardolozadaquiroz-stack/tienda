@@ -76,7 +76,7 @@
           <!-- Items -->
           <div class="pi-row" v-for="item in productos" :key="item._id">
             <div class="pi-product">
-              <img :src="$url+'/obtener_portada_producto/'+item.producto.portada" class="pi-img" :alt="item.producto.titulo" />
+              <img :src="$imgSrc(item.producto.portada)" class="pi-img" :alt="item.producto.titulo" />
               <div class="pi-info">
                 <span class="pi-name">{{ item.producto.titulo }}</span>
                 <span class="pi-var">{{ item.producto.str_variedad }}: <strong>{{ item.variedad.variedad }}</strong></span>
@@ -225,22 +225,20 @@ export default {
         return;
       }
       this.procesando = true;
-      const data = {
-        back_urls: {
-          success: window.location.origin + '/verificacion/success/' + this.venta.direccion,
-          pending: window.location.origin + '/verificacion/pending',
-          failure: window.location.origin + '/verificacion/failure'
-        },
+
+      // La llamada va al BACKEND propio — el token de MP nunca toca el frontend
+      axios.post(this.$url + '/crear_preferencia_mp', {
         items: this.items,
-        auto_return: 'approved'
-      };
-      axios.post('https://api.mercadopago.com/checkout/preferences', data, {
+        direccion: this.venta.direccion
+      }, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer TEST-1167811298028131-010513-c32aa2ae9342431bd3ca07b90846dff1-147238555'
+          'Authorization': this.$store.state.token
         }
       }).then((result) => {
-        window.location.href = result.data.sandbox_init_point;
+        // En producción usar init_point, en sandbox usar sandbox_init_point
+        const url = result.data.init_point || result.data.sandbox_init_point;
+        window.location.href = url;
       }).catch(() => {
         this.pay_error = 'Ocurrió un error al procesar el pago. Intenta de nuevo.';
         this.procesando = false;

@@ -24,10 +24,20 @@ const app = createApp(App)
 const socketUrl = process.env.VUE_APP_API_URL || 'http://localhost:4201';
 const socket = io(socketUrl, { transports: ['websocket'] });
 
-app.config.globalProperties.$url = socketUrl + '/api';
-// $ganancia: margen comercial configurable vía VUE_APP_GANANCIA en .env
+const panelApiUrl = socketUrl + '/api';
+
+// $imgSrc(val, endpoint): devuelve la URL de imagen correcta.
+// Si val es una URL de Cloudinary, la usa directo. Si es filename antiguo, usa el endpoint backend.
+const _panelImgSrc = function(val, endpoint = 'obtener_portada_producto') {
+  if (!val) return '';
+  if (val.startsWith('http')) return val;
+  return panelApiUrl + '/' + endpoint + '/' + val;
+};
+
+app.config.globalProperties.$url = panelApiUrl;
 app.config.globalProperties.$ganancia = Number(process.env.VUE_APP_GANANCIA) || 30;
 app.config.globalProperties.$socket = socket;
+app.config.globalProperties.$imgSrc = _panelImgSrc;
 
 app.use(store)
 app.use(router)

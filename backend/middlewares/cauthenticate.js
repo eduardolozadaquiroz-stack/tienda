@@ -1,17 +1,31 @@
 var jwt = require('jsonwebtoken');
+var logger = require('../helpers/logger');
 
 exports.decodeToken = function(req, res, next) {
     if (!req.headers.authorization) {
-        return res.status(403).send({ message: 'NoHeadersError' });
+        return res.status(401).send({ message: 'NoHeadersError' });
     }
 
     var token = req.headers.authorization;
 
+    // OWASP #8: rechazar tokens con algoritmo 'none'
     try {
-        var payload = jwt.verify(token, process.env.JWT_SECRET_CLIENTE);
+        const header = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString());
+        if (!header.alg || header.alg.toLowerCase() === 'none') {
+            logger.tokenInvalid(req);
+            return res.status(401).send({ message: 'ErrorToken' });
+        }
+    } catch (_) {
+        return res.status(401).send({ message: 'ErrorToken' });
+    }
+
+    try {
+        // OWASP #8: forzar algoritmo HS256 explícitamente
+        var payload = jwt.verify(token, process.env.JWT_SECRET_CLIENTE, { algorithms: ['HS256'] });
         req.user = payload;
         next();
     } catch (error) {
-        return res.status(403).send({ message: 'ErrorToken' });
+        logger.tokenInvalid(req);
+        return res.status(401).send({ message: 'ErrorToken' });
     }
 }

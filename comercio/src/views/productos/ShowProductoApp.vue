@@ -12,13 +12,13 @@
                 <!-- Si hay galería, mostrar sus miniaturas -->
                 <template v-if="galeria.length > 0">
                   <button class="owl-thumb-item detail-thumb-item mb-3" v-for="img in galeria.slice(0,5)" :key="img._id">
-                    <img class="img-fluid" :src="$url+'/obtener_galeria_producto/'+img.imagen" :alt="producto.titulo">
+                    <img class="img-fluid" :src="$imgSrc(img.imagen, 'obtener_galeria_producto')" :alt="producto.titulo">
                   </button>
                 </template>
                 <!-- Fallback: miniatura de portada -->
                 <template v-else>
                   <button class="owl-thumb-item detail-thumb-item mb-3">
-                    <img class="img-fluid" :src="$url+'/obtener_portada_producto/'+producto.portada" :alt="producto.titulo">
+                    <img class="img-fluid" :src="$imgSrc(producto.portada)" :alt="producto.titulo">
                   </button>
                 </template>
               </div>
@@ -32,16 +32,16 @@
               <div class="owl-carousel detail-slider owl-theme owl-dots-modern" data-slider-id="1">
                 <template v-if="galeria.length > 0">
                   <div class="item" v-for="img in galeria.slice(0,5)" :key="img._id">
-                    <a class="glightbox" :href="$url+'/obtener_galeria_producto/'+img.imagen" data-gallery="product-gallery">
-                      <img class="img-fluid" :src="$url+'/obtener_galeria_producto/'+img.imagen" :alt="producto.titulo">
+                    <a class="glightbox" :href="$imgSrc(img.imagen, 'obtener_galeria_producto')" data-gallery="product-gallery">
+                      <img class="img-fluid" :src="$imgSrc(img.imagen, 'obtener_galeria_producto')" :alt="producto.titulo">
                     </a>
                   </div>
                 </template>
                 <!-- Fallback: mostrar portada centrada con buen tamaño -->
                 <template v-else>
                   <div class="item">
-                    <a class="glightbox" :href="$url+'/obtener_portada_producto/'+producto.portada" data-gallery="product-gallery">
-                      <img class="img-fluid" :src="$url+'/obtener_portada_producto/'+producto.portada" :alt="producto.titulo"
+                    <a class="glightbox" :href="$imgSrc(producto.portada)" data-gallery="product-gallery">
+                      <img class="img-fluid" :src="$imgSrc(producto.portada)" :alt="producto.titulo"
                            style="max-height:480px;width:100%;object-fit:contain;background:#f8f9fa;border-radius:8px;">
                     </a>
                   </div>
@@ -122,7 +122,7 @@
               <!-- PERSONALIZACIÓN →  Canvas editor -->
               <div class="col-12 mb-4" v-if="producto.personalizable">
                 <CanvasPersonalizador
-                  :productImageUrl="$url+'/obtener_portada_producto/'+producto.portada"
+                  :productImageUrl="$imgSrc(producto.portada)"
                   @canvas-updated="onCanvasUpdated"
                   @nota-updated="notaPersonalizacion = $event"
                 />
@@ -286,7 +286,7 @@
             <div class="product">
               <div class="product-image">
                 <div class="ribbon ribbon-danger" v-if="item.descuento">Oferta</div>
-                <img class="img-fluid" :src="$url+'/obtener_portada_producto/'+item.portada" alt="product"/>
+                <img class="img-fluid" :src="$imgSrc(item.portada)" alt="product"/>
                 <div class="product-hover-overlay">
                   <a class="product-hover-overlay-link" href="detail.html"></a>
                 </div>
@@ -331,10 +331,54 @@ import axios from 'axios';
 import moment from 'moment';
 import $ from 'jquery';
 import CanvasPersonalizador from '@/components/CanvasPersonalizador.vue';
+import { useHead } from '@vueuse/head';
+import { ref, computed } from 'vue';
 
 export default {
   name: 'ShowProductoApp',
   components: { CanvasPersonalizador },
+  setup() {
+    const _titulo = ref('');
+    const _descripcion = ref('');
+    const _imagen = ref('');
+    const _precio = ref(0);
+    const _slug = ref('');
+
+    useHead({
+      title: computed(() => _titulo.value ? `${_titulo.value} | OVERSIZE MX` : 'Producto | OVERSIZE MX'),
+      meta: [
+        { name: 'description', content: computed(() => _descripcion.value || 'Playera oversize de OVERSIZE MX. Diseños únicos, tallas S–XXL, envío a todo México.') },
+        { property: 'og:title', content: computed(() => _titulo.value || 'Producto | OVERSIZE MX') },
+        { property: 'og:description', content: computed(() => _descripcion.value) },
+        { property: 'og:image', content: computed(() => _imagen.value) },
+        { property: 'og:url', content: computed(() => `https://oversizemx.pages.dev/producto/${_slug.value}`) },
+        { property: 'og:type', content: 'og:product' },
+        { name: 'twitter:title', content: computed(() => _titulo.value || 'Producto | OVERSIZE MX') },
+        { name: 'twitter:description', content: computed(() => _descripcion.value) },
+        { name: 'twitter:image', content: computed(() => _imagen.value) },
+      ],
+      script: [{
+        type: 'application/ld+json',
+        children: computed(() => JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: _titulo.value,
+          description: _descripcion.value,
+          image: _imagen.value,
+          brand: { '@type': 'Brand', name: 'OVERSIZE MX' },
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'MXN',
+            price: _precio.value,
+            availability: 'https://schema.org/InStock',
+            seller: { '@type': 'Organization', name: 'OVERSIZE MX' },
+          },
+        })),
+      }],
+    });
+
+    return { _titulo, _descripcion, _imagen, _precio, _slug };
+  },
   data() {
     return {
       galeria : [],
@@ -461,6 +505,19 @@ export default {
     init_carousel.init_zoom();
     this.init_data();
   
+  },
+  watch: {
+    producto(val) {
+      if (val && val.titulo) {
+        this._titulo = val.titulo;
+        this._descripcion = val.extracto || '';
+        this._precio = val.precio || 0;
+        this._slug = val.slug || this.$route.params.slug;
+        this._imagen = val.portada
+          ? (val.portada.startsWith('http') ? val.portada : this.$url + '/obtener_portada_producto/' + val.portada)
+          : '';
+      }
+    },
   },
 }
 </script>

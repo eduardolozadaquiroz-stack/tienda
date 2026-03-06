@@ -1,11 +1,62 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="es">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title><%= htmlWebpackPlugin.options.title %></title>
+
+    <!-- SEO base -->
+    <title>OVERSIZE MX | Playeras Oversize para Hombre y Mujer en México</title>
+    <meta name="description" content="Tienda de playeras oversize en México. Tallas CH a XXL, envío a todo el país. Diseños exclusivos y personalizados. ¡Expresa tu estilo con OVERSIZE MX!">
+    <meta name="keywords" content="playeras oversize, playeras oversize México, ropa oversize hombre, ropa oversize mujer, playeras personalizadas México, playeras talla grande">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="OVERSIZE MX">
+    <link rel="canonical" href="https://oversizemx.pages.dev/">
+
+    <!-- Open Graph (Facebook, WhatsApp, etc.) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="OVERSIZE MX">
+    <meta property="og:url" content="https://oversizemx.pages.dev/">
+    <meta property="og:title" content="OVERSIZE MX | Playeras Oversize en México">
+    <meta property="og:description" content="Playeras oversize únicas para hombre y mujer. Tallas CH a XXL, envío a todo México. ¡Personaliza la tuya!">
+    <meta property="og:image" content="https://oversizemx.pages.dev/assets/media/og-default.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="es_MX">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OVERSIZE MX | Playeras Oversize en México">
+    <meta name="twitter:description" content="Playeras oversize únicas para hombre y mujer. Tallas CH a XXL, envío a todo México.">
+    <meta name="twitter:image" content="https://oversizemx.pages.dev/assets/media/og-default.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="<%= BASE_URL %>assets/favicon.svg">
+    <link rel="shortcut icon" href="<%= BASE_URL %>assets/favicon.svg">
+    <link rel="apple-touch-icon" href="<%= BASE_URL %>assets/favicon.svg">
+
+    <!-- Google Search Console verification (reemplaza con tu código real) -->
+    <meta name="google-site-verification" content="5BVVtirsDb0Xt-1gvQR7rfR9_qvnlFx8J0k_0rSsGYc">
+
+    <!-- Schema.org: Organización/tienda -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ClothingStore",
+      "name": "OVERSIZE MX",
+      "url": "https://oversizemx.pages.dev",
+      "description": "Tienda de playeras oversize para hombre y mujer en México. Tallas CH a XXL, diseños exclusivos y personalizados.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "MX"
+      },
+      "priceRange": "$$",
+      "currenciesAccepted": "MXN",
+      "paymentAccepted": "Mercado Pago, Tarjeta de crédito, Débito",
+      "openingHours": "Mo-Su 00:00-24:00",
+      "sameAs": []
+    }
+    </script>
 
     <link rel="stylesheet" href="<%= BASE_URL %>assets/css/nouislider.css">
     <!-- Google fonts - Playfair Display-->
@@ -20,7 +71,7 @@
     <!-- Custom stylesheet - for your changes-->
     <link rel="stylesheet" href="https://d19m59y37dris4.cloudfront.net/sell/2-0/css/custom.0a822280.css">
     <!-- Favicon-->
-    <link rel="shortcut icon" href="<%= BASE_URL %>assets/favicon.png">
+    <link rel="shortcut icon" href="<%= BASE_URL %>assets/favicon.svg">
 
     <link rel="stylesheet" href="<%= BASE_URL %>assets/css/solid.css">
     <link rel="stylesheet" href="<%= BASE_URL %>assets/css/regular.css">

@@ -8,5 +8,5 @@ exports.createToken = function(cliente) {
         email: cliente.email,
         genero: cliente.genero
     };
-    return jwt.sign(payload, process.env.JWT_SECRET_CLIENTE, { expiresIn: '15d' });
+    return jwt.sign(payload, process.env.JWT_SECRET_CLIENTE, { expiresIn: '30d' });
 }

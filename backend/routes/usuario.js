@@ -3,13 +3,9 @@ var usuarioController = require('../controllers/usuarioController');
 var api = express.Router();
 var authenticate = require('../middlewares/authenticate');
 var multer = require('multer');
-var pathModule = require('path');
 
-var avatarStorage = multer.diskStorage({
-    destination: function(req, file, cb) { cb(null, './uploads/avatars'); },
-    filename: function(req, file, cb) { cb(null, Date.now() + pathModule.extname(file.originalname)); }
-});
-var uploadAvatar = multer({ storage: avatarStorage });
+// Usamos memoryStorage: los avatares se suben a Cloudinary desde el buffer en memoria
+var uploadAvatar = multer({ storage: multer.memoryStorage() });
 
 
 api.post('/registro_usuario_admin',authenticate.decodeToken,usuarioController.registro_usuario_admin);

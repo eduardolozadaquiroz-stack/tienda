@@ -5,6 +5,7 @@ var mongoose = require('mongoose');
 var bodyparser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+var logger = require('./helpers/logger');
 var port = process.env.PORT || 4201;
 const { createServer } = require("http");
 const { Server } = require("socket.io");
@@ -40,11 +41,12 @@ var producto_router = require('./routes/producto');
 var public_router = require('./routes/public');
 var customer_router = require('./routes/customer');
 var venta_router = require('./routes/venta');
+var mercadopago_router = require('./routes/mercadopago');
 
-// Rate limiter para login — muy estricto
+// Rate limiter para login — 5 intentos en 15 min (luego la cuenta se bloquea en BD)
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 15,
+    max: 5,
     message: { message: 'Demasiados intentos de inicio de sesión. Espera 15 minutos.' },
     standardHeaders: true,
     legacyHeaders: false
@@ -106,12 +108,25 @@ app.use('/api', producto_router);
 app.use('/api', public_router);
 app.use('/api', customer_router);
 app.use('/api', venta_router);
+app.use('/api', mercadopago_router);
 
-// Middleware global de manejo de errores
+// OWASP #5: Protección contra parámetros no esperados — bloquear rutas no definidas
+app.use((req, res, next) => {
+    res.status(404).send({ message: 'Ruta no encontrada.' });
+});
+
+// OWASP #9: Middleware global de manejo de errores con logging
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    logger.error('UNHANDLED_ERROR', {
+        method: req.method,
+        url: req.originalUrl,
+        error: err.message,
+        status: err.status || 500
+    });
+    // OWASP #5: no exponer stacktrace en producción
+    const isProd = process.env.NODE_ENV === 'production';
     res.status(err.status || 500).send({
-        message: err.message || 'Error interno del servidor'
+        message: isProd ? 'Error interno del servidor' : (err.message || 'Error interno del servidor')
     });
 });
 

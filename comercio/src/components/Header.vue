@@ -23,7 +23,9 @@
           <!-- Navbar Header  -->
           <router-link class="navbar-brand" style="color:white !important" to="/"> 👕 OVERSIZE MX</router-link>
 
-          <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation"><i class="fa fa-bars"></i></button>
+          <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
           <!-- Navbar Collapse -->
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav mx-auto">
@@ -61,12 +63,12 @@
                 </div>
                 <!-- Cart Dropdown-->
                 <div class="nav-item dropdown">
-                    <a class="navbar-icon-link d-lg-none" href="cart.html">
-                        <img src="/assets/icons/user.png" style="width: 25px;" />
-                        <span class="text-sm ms-2 ms-lg-0 text-uppercase text-sm fw-bold d-none d-sm-inline d-lg-none">View cart</span>
-                    </a>
+                    <router-link class="navbar-icon-link d-lg-none" to="/cart" style="position:relative;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span v-if="carrito_length > 0" style="position:absolute;top:-6px;right:-8px;background:#e34234;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">{{carrito_length}}</span>
+                    </router-link>
                     <div class="d-none d-lg-block">
-                        <a class="navbar-icon-link" id="cartdetails" href="cart.html" data-bs-target="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="navbar-icon-link" id="cartdetails" href="#" data-bs-target="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <img src="/assets/icons/cart.png" style="width: 25px;" />
                             <div class="navbar-icon-link-badge">{{carrito_length}}</div>
                         </a>
@@ -76,7 +78,7 @@
                                 <div class="navbar-cart-product" v-for="item in carrito" :key="item.id">
                                     <div class="d-flex align-items-center">
                                         <a href="detail.html">
-                                          <img class="img-fluid navbar-cart-product-image" :src="$url+'/obtener_portada_producto/'+item.producto.portada" alt="..." /></a>
+                                          <img class="img-fluid navbar-cart-product-image" :src="$imgSrc(item.producto.portada)" alt="..." /></a>
                                         <div class="w-100">
                                             <a class="navbar-cart-product-close" href="#">
                                               <img src="/assets/icons/close.png" style="width: 15px;" />

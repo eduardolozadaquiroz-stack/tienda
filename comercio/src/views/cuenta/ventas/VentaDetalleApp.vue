@@ -69,7 +69,7 @@
                                     <div class="col-4">
                                         <div class="d-flex align-items-center">
                                           <router-link :to="{name: 'show-producto',params:{slug: item.detalle.producto.slug}}">
-                                                <img class="cart-item-img" :src="$url+'/obtener_portada_producto/'+item.detalle.producto.portada" alt="...">
+                                                <img class="cart-item-img" :src="$imgSrc(item.detalle.producto.portada)" alt="...">
                                             </router-link>
                                             <div class="cart-title text-start">
                                                 <router-link class="text-uppercase text-dark" :to="{name: 'show-producto',params:{slug: item.detalle.producto.slug}}">

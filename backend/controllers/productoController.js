@@ -8,6 +8,13 @@ var Ingreso_detalle = require('../models/ingreso_detalle');
 var slugify = require('slugify');
 var fs = require('fs');
 var path = require('path');
+var cloudinaryHelper = require('../helpers/cloudinary');
+var logger = require('../helpers/logger');
+
+// OWASP #3: escapar caracteres especiales de RegExp
+function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 const registro_producto_admin = async function(req,res){
     if(req.user){
@@ -18,7 +25,8 @@ const registro_producto_admin = async function(req,res){
             res.status(200).send({data:undefined,message: 'El titulo del producto ya existe.'});   
         }else{
             //REGISTRO PRODUCTO
-            var str_portada = req.files['portada'][0].filename;
+            var uploadResult = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+            var str_portada = uploadResult.secure_url;
 
             ///
 
@@ -42,12 +50,14 @@ const registro_producto_admin = async function(req,res){
 const listar_productos_admin = async function(req,res){
     if(req.user){
 
-        let filtro = req.params['filtro'];
+        let filtro = req.params['filtro'] || '';
+        // OWASP #3: escapar input antes de usarlo en RegExp
+        const safeFilter = escapeRegex(filtro.trim());
 
         let productos = await Producto.find({
             $or: [
-                {titulo: new RegExp(filtro,'i')},
-                {categoria: new RegExp(filtro,'i')}
+                {titulo: new RegExp(safeFilter,'i')},
+                {categoria: new RegExp(safeFilter,'i')}
             ]
         }).sort({createdAt:-1});
         res.status(200).send(productos);
@@ -57,15 +67,38 @@ const listar_productos_admin = async function(req,res){
     }
 }
 
+// OWASP #10 (SSRF): solo permitir redirecciones a dominios confiables
+const ALLOWED_REDIRECT_HOSTS = ['res.cloudinary.com', 'cloudinary.com'];
+
+function safeRedirect(res, rawUrl) {
+    try {
+        const decoded = decodeURIComponent(rawUrl);
+        const parsed = new URL(decoded);
+        if (!ALLOWED_REDIRECT_HOSTS.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
+            return res.status(400).send({ message: 'URL no permitida.' });
+        }
+        return res.redirect(302, decoded);
+    } catch (_) {
+        return res.status(400).send({ message: 'URL no válida.' });
+    }
+}
+
 const obtener_portada_producto = async function(req,res){
     let img = req.params['img'];
 
-    fs.stat('./uploads/productos/'+img,function(err){
+    // OWASP #10: usar safeRedirect en lugar de redirect directo
+    if (img && img.startsWith('http')) {
+        return safeRedirect(res, img);
+    }
+
+    // OWASP #5: evitar path traversal en archivos locales
+    const safeName = path.basename(img);
+    fs.stat('./uploads/productos/' + safeName, function(err){
         if(err){
             let path_img = './uploads/default.jpg';
             res.status(200).sendFile(path.resolve(path_img));
         }else{
-            let path_img = './uploads/productos/'+img;
+            let path_img = './uploads/productos/' + safeName;
             res.status(200).sendFile(path.resolve(path_img));
         }
     });
@@ -100,9 +133,10 @@ const actualizar_producto_admin = async function(req,res){
 
         if(productos.length>= 1){
             if(productos[0]._id == id){
-                if(req.files){
+                if(req.files && req.files['portada']){
                     //REGISTRO PRODUCTO
-                    var str_portada = req.files['portada'][0].filename;
+                    var uploadResult1 = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+                    var str_portada = uploadResult1.secure_url;
     
                     ///
     
@@ -151,9 +185,10 @@ const actualizar_producto_admin = async function(req,res){
                 res.status(200).send({data:undefined,message: 'El titulo de producto ya existe.'});   
             }
         }else{
-            if(req.files){
+            if(req.files && req.files['portada']){
                 //REGISTRO PRODUCTO
-                var str_portada = req.files['portada'][0].filename;
+                var uploadResult2 = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+                var str_portada = uploadResult2.secure_url;
 
                 ///
 
@@ -277,9 +312,18 @@ const registro_ingreso_admin = async function(req,res){
                 data.serie = reg_ingresos[0].serie + 1;
             }
 
-            let detalles = JSON.parse(data.detalles); //detalles ingreso
+            // OWASP #3: parsear input externo con manejo seguro de errores
+            let detalles;
+            try {
+                detalles = JSON.parse(data.detalles);
+                if (!Array.isArray(detalles)) throw new Error('detalles debe ser un arreglo');
+            } catch (parseErr) {
+                logger.suspiciousInput(req, 'detalles JSON inválido en registro_ingreso_admin');
+                return res.status(400).send({ message: 'El campo detalles no es válido.' });
+            }
 
-            var str_documento = req.files['documento'][0].filename;
+            var uploadDoc = await cloudinaryHelper.uploadBufferAuto(req.files['documento'][0].buffer, 'facturas');
+            var str_documento = uploadDoc.secure_url;
 
             data.documento = str_documento;
             data.usuario = req.user.sub;
@@ -340,7 +384,8 @@ const subir_imagen_producto_admin = async function(req,res){
         let data = req.body;
 
         //REGISTRO PRODUCTO
-        var str_imagen = req.files['imagen'][0].filename;
+        var uploadImg = await cloudinaryHelper.uploadBuffer(req.files['imagen'][0].buffer, 'galeria');
+        var str_imagen = uploadImg.secure_url;
 
         ///
 
@@ -359,12 +404,19 @@ const subir_imagen_producto_admin = async function(req,res){
 const obtener_galeria_producto = async function(req,res){
     let img = req.params['img'];
 
-    fs.stat('./uploads/galeria/'+img,function(err){
+    // OWASP #10: usar safeRedirect
+    if (img && img.startsWith('http')) {
+        return safeRedirect(res, img);
+    }
+
+    // OWASP #5: evitar path traversal
+    const safeName = path.basename(img);
+    fs.stat('./uploads/galeria/' + safeName, function(err){
         if(err){
             let path_img = './uploads/default.jpg';
             res.status(200).sendFile(path.resolve(path_img));
         }else{
-            let path_img = './uploads/galeria/'+img;
+            let path_img = './uploads/galeria/' + safeName;
             res.status(200).sendFile(path.resolve(path_img));
         }
     });
@@ -389,10 +441,14 @@ const eliminar_galeria_producto_admin = async function(req,res){
 
         try {
             let reg = await Galeria.findById({_id:id});
-            let path_img = './uploads/galeria/'+reg.imagen;
-            fs.unlinkSync(path_img);
+            if (reg && reg.imagen) {
+                if (reg.imagen.startsWith('http')) {
+                    await cloudinaryHelper.deleteByUrl(reg.imagen);
+                } else {
+                    try { fs.unlinkSync('./uploads/galeria/'+reg.imagen); } catch(e){}
+                }
+            }
 
-            
             let galeria = await Galeria.findByIdAndRemove({_id:id});
             res.status(200).send(galeria);
         } catch (error) {
@@ -527,6 +583,10 @@ const obtener_ingresos_admin = async function(req,res){
 const obtener_comprobante_ingreso = async function(req,res){
     let name = req.params['name'];
 
+    if (name && name.startsWith('http')) {
+        return res.redirect(302, decodeURIComponent(name));
+    }
+
     fs.stat('./uploads/facturas/'+name,function(err){
         if(err){
             let path_img = './uploads/default.jpg';
@@ -542,16 +602,24 @@ const eliminar_producto_admin = async function(req,res){
     if(req.user){
         let id = req.params['id'];
         try {
-            // Eliminar portada del disco
+            // Eliminar portada
             let producto = await Producto.findById(id);
             if(!producto) return res.status(404).send({message: 'Producto no encontrado.'});
 
-            try { fs.unlinkSync('./uploads/productos/'+producto.portada); } catch(e){}
+            if (producto.portada && producto.portada.startsWith('http')) {
+                await cloudinaryHelper.deleteByUrl(producto.portada);
+            } else {
+                try { fs.unlinkSync('./uploads/productos/'+producto.portada); } catch(e){}
+            }
 
-            // Eliminar imágenes de galería del disco
+            // Eliminar imágenes de galería
             let imagenes = await Galeria.find({producto: id});
             for(let img of imagenes){
-                try { fs.unlinkSync('./uploads/galeria/'+img.imagen); } catch(e){}
+                if (img.imagen && img.imagen.startsWith('http')) {
+                    await cloudinaryHelper.deleteByUrl(img.imagen);
+                } else {
+                    try { fs.unlinkSync('./uploads/galeria/'+img.imagen); } catch(e){}
+                }
             }
             await Galeria.deleteMany({producto: id});
 

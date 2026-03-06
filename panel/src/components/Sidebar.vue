@@ -107,6 +107,24 @@
               </router-link>
           </li>
         </ul>
+
+        <hr class="navbar-divider my-3">
+        <h6 class="navbar-heading">
+          Clientes y Seguridad
+        </h6>
+
+        <ul class="navbar-nav mb-md-4">
+          <li class="nav-item">
+            <router-link to="/clientes" class="nav-link" active-class="active">
+              <i class="fe fe-users"></i> Clientes
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/seguridad/logs" class="nav-link" active-class="active">
+              <i class="fe fe-shield"></i> Logs de Seguridad
+            </router-link>
+          </li>
+        </ul>
   
   
         <!-- Push content down -->
@@ -384,7 +402,7 @@ methods: {
         headers: { 'Authorization': this.$store.state.token }
       });
       if (res.data && res.data.avatar) {
-        this.avatarUrl = this.$url + '/obtener_avatar_usuario/' + res.data.avatar;
+        this.avatarUrl = this.$imgSrc(res.data.avatar, 'obtener_avatar_usuario');
       }
     } catch { /* silencioso */ }
   },

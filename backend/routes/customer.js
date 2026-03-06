@@ -8,7 +8,12 @@ var uploadDiseno = multer({
     storage: multer.diskStorage({
         destination: function(req, file, cb){ cb(null, './uploads/diseños'); },
         filename: function(req, file, cb){ cb(null, Date.now() + pathModule.extname(file.originalname)); }
-    })
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB máximo
+    fileFilter: function(req, file, cb){
+        const allowed = /jpeg|jpg|png|webp/;
+        cb(null, allowed.test(pathModule.extname(file.originalname).toLowerCase()));
+    }
 });
 
 var api = express.Router();
@@ -33,6 +38,7 @@ var uploadAvatar = multer({
         destination: function(req, file, cb){ cb(null, './uploads/avatars'); },
         filename: function(req, file, cb){ cb(null, Date.now() + pathModule.extname(file.originalname)); }
     }),
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB máximo para avatares
     fileFilter: function(req, file, cb){
         const allowed = /jpeg|jpg|png|webp/;
         cb(null, allowed.test(pathModule.extname(file.originalname).toLowerCase()));

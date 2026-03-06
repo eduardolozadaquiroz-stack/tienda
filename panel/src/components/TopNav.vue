@@ -104,7 +104,7 @@ export default {
           headers: { 'Authorization': this.$store.state.token }
         });
         if (res.data && res.data.avatar) {
-          this.avatarUrl = this.$url + '/obtener_avatar_usuario/' + res.data.avatar;
+          this.avatarUrl = this.$imgSrc(res.data.avatar, 'obtener_avatar_usuario');
         }
       } catch { /* silencioso */ }
     },

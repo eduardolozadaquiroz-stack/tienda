@@ -124,7 +124,7 @@
                                               {{convertCurrency(item.monto_resultante)}}
                                           </td>
                                           <td>
-                                              <a :href="$url+'/obtener_comprobante_ingreso/'+item.documento" target="_blank">
+                                              <a :href="$imgSrc(item.documento, 'obtener_comprobante_ingreso')" target="_blank">
                                                   <span class="badge bg-success">Abrir documento</span>
                                               </a>
                                           </td>

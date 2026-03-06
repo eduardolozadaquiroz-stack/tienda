@@ -38,7 +38,7 @@
                 <img v-if="previewAvatar" :src="previewAvatar"
                   style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #4c6ef5;cursor:pointer;"
                   @click="$refs.inputAvatar.click()" alt="preview">
-                <img v-if="perfil.avatar && !previewAvatar" :src="$url+'/obtener_avatar_usuario/'+perfil.avatar"
+                <img v-if="perfil.avatar && !previewAvatar" :src="$imgSrc(perfil.avatar, 'obtener_avatar_usuario')"
                   style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #4c6ef5;cursor:pointer;"
                   @click="$refs.inputAvatar.click()" alt="avatar">
                 <!-- Ícono cámara encima -->

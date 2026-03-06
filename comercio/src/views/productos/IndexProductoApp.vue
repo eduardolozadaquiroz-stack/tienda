@@ -84,7 +84,7 @@
             <router-link class="scard" v-for="item in itemsForList" :key="item.id" :to="{ name: 'show-producto', params: { slug: item.slug } }">
               <div class="scard-img">
                 <span class="scard-badge" v-if="item.descuento">Oferta</span>
-                <img :src="$url + '/obtener_portada_producto/' + item.portada" :alt="item.titulo" />
+                <img :src="$imgSrc(item.portada)" :alt="item.titulo" />
                 <div class="scard-overlay"><span>Ver producto →</span></div>
               </div>
               <div class="scard-info">
@@ -196,9 +196,23 @@ a { text-decoration: none; color: inherit; }
     import noUiSlider from '../../../public/assets/js/nouislider.min.js';
     import currency_formatter from 'currency-formatter';
     import axios from 'axios';
+    import { useHead } from '@vueuse/head';
 
     export default {
-       
+        setup() {
+            useHead({
+                title: 'Tienda | Toda la Colección Oversize – OVERSIZE MX',
+                meta: [
+                    { name: 'description', content: 'Explora toda la colección de playeras oversize para hombre y mujer. Filtra por categoría, talla y precio. Envío a todo México.' },
+                    { property: 'og:title', content: 'Tienda OVERSIZE MX | Playeras Oversize' },
+                    { property: 'og:description', content: 'Explora toda la colección de playeras oversize. Tallas S–XXL, envío a todo México.' },
+                    { property: 'og:url', content: 'https://oversizemx.pages.dev/shop' },
+                    { property: 'og:type', content: 'website' },
+                    { name: 'twitter:title', content: 'Tienda OVERSIZE MX | Playeras Oversize' },
+                    { name: 'twitter:description', content: 'Explora toda la colección de playeras oversize. Tallas S–XXL, envío a todo México.' },
+                ],
+            });
+        },
         data() {
             return {
                 slider: {

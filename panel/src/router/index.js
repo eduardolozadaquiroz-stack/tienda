@@ -28,6 +28,12 @@ const routes = [
 
   {path: '/categorias',name: 'categorias',component: ()=> import('@/views/categorias/IndexCategoriaApp.vue'), meta: { requiresAuth: true}},
   {path: '/perfil',name: 'perfil',component: ()=> import('@/views/PerfilApp.vue'), meta: { requiresAuth: true}},
+
+  // Clientes
+  {path: '/clientes',name: 'clientes-index',component: ()=> import('@/views/clientes/IndexClientesApp.vue'), meta: { requiresAuth: true}},
+
+  // Seguridad — logs
+  {path: '/seguridad/logs',name: 'seguridad-logs',component: ()=> import('@/views/seguridad/LogsSeguridadApp.vue'), meta: { requiresAuth: true}},
 ]
 
 const router = createRouter({

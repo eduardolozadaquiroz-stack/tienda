@@ -103,7 +103,7 @@
                                             {{ iniciales(colaborador.nombres, colaborador.apellidos) }}
                                         </div>
                                         <img v-if="previewAvatar" :src="previewAvatar" class="rounded-circle" style="width:90px;height:90px;object-fit:cover;border:3px solid #12b886;" alt="preview">
-                                        <img v-if="colaborador.avatar && !previewAvatar" :src="$url+'/obtener_avatar_usuario/'+colaborador.avatar" class="rounded-circle" style="width:90px;height:90px;object-fit:cover;border:3px solid #12b886;" alt="avatar">
+                                        <img v-if="colaborador.avatar && !previewAvatar" :src="$imgSrc(colaborador.avatar, 'obtener_avatar_usuario')" class="rounded-circle" style="width:90px;height:90px;object-fit:cover;border:3px solid #12b886;" alt="avatar">
                                     </div>
                                     <!-- Selector de archivo -->
                                     <div style="flex:1;min-width:200px;">

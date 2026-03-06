@@ -1,5 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import store from '@/store/index'
+
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]))
+  } catch {
+    return null
+  }
+}
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
@@ -10,12 +19,12 @@ const routes = [
 
   //////////////////////////////////////////////////////////////////////////
 
-  {path: '/cuenta/perfil',name: 'perfil',component: ()=> import('@/views/cuenta/PerfilApp.vue')},
-  {path: '/cuenta/direcciones',name: 'direcciones',component: ()=> import('@/views/cuenta/DireccionesApp.vue')},
-  {path: '/checkout',name: 'checkout',component: ()=> import('@/views/CheckoutView.vue')},
-  {path: '/verificacion/:estado/:direccion?',name: 'verificacion',component: ()=> import('@/views/VerificacionView.vue')},
-  {path: '/cuenta/venta/:id',name: 'venta',component: ()=> import('@/views/cuenta/ventas/VentaDetalleApp.vue')},
-  {path: '/cuenta/venta',name: 'venta-index',component: ()=> import('@/views/cuenta/ventas/VentaIndexApp.vue')},
+  {path: '/cuenta/perfil',name: 'perfil',component: ()=> import('@/views/cuenta/PerfilApp.vue'), meta: { requiresAuth: true }},
+  {path: '/cuenta/direcciones',name: 'direcciones',component: ()=> import('@/views/cuenta/DireccionesApp.vue'), meta: { requiresAuth: true }},
+  {path: '/checkout',name: 'checkout',component: ()=> import('@/views/CheckoutView.vue'), meta: { requiresAuth: true }},
+  {path: '/verificacion/:estado/:direccion?',name: 'verificacion',component: ()=> import('@/views/VerificacionView.vue'), meta: { requiresAuth: true }},
+  {path: '/cuenta/venta/:id',name: 'venta',component: ()=> import('@/views/cuenta/ventas/VentaDetalleApp.vue'), meta: { requiresAuth: true }},
+  {path: '/cuenta/venta',name: 'venta-index',component: ()=> import('@/views/cuenta/ventas/VentaIndexApp.vue'), meta: { requiresAuth: true }},
 ]
 
 const router = createRouter({
@@ -26,4 +35,21 @@ const router = createRouter({
   }
 })
 
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(item => item.meta.requiresAuth)) {
+    const token = store.state.token
+    if (!token) {
+      return next({ name: 'login' })
+    }
+    const decoded = parseJwt(token)
+    if (!decoded || decoded.exp * 1000 <= Date.now()) {
+      store.dispatch('logout')
+      return next({ name: 'login' })
+    }
+    return next()
+  }
+  return next()
+})
+
 export default router
+

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /producto/
+
+# No indexar páginas privadas
+Disallow: /cuenta/
+Disallow: /checkout
+Disallow: /verificacion/
+Disallow: /cart
+Disallow: /login
+
+# Sitemap estático (páginas principales)
+Sitemap: https://oversizemx.pages.dev/sitemap.xml
+# Sitemap dinámico de productos — reemplaza TU-BACKEND por tu dominio en Render
+Sitemap: https://TU-BACKEND.onrender.com/api/sitemap-productos.xml

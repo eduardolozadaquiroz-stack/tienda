@@ -7,10 +7,16 @@ var Review = require('../models/review');
 var socketModule = require('../socket');
 var fs = require('fs');
 var path = require('path');
+var logger = require('../helpers/logger');
+
+// Umbral: más de 3 ventas del mismo cliente en 10 minutos = comportamiento inusual
+const VENTAS_UMBRAL = 3;
+const VENTAS_VENTANA_MS = 10 * 60 * 1000;
 
 const crear_producto_carrito = async function(req,res){
     if(req.user){
         let data = req.body;
+        data.cliente = req.user.sub; // Siempre obtener el cliente del token, nunca confiar en el body
 
         var variedad = await Variedad.findById({_id:data.variedad}).populate('producto');
 
@@ -48,6 +54,11 @@ const obtener_carrito_cliente = async function(req,res){
 const eliminar_producto_carrito = async function(req,res){
     if(req.user){
        let id = req.params['id'];
+       // Verificar propiedad antes de eliminar (Broken Access Control)
+       const item = await Carrito.findById(id);
+       if (!item || item.cliente.toString() !== req.user.sub.toString()) {
+           return res.status(403).send({ data: undefined, message: 'No tienes permiso para eliminar este item.' });
+       }
        let reg = await Carrito.findByIdAndRemove({_id:id});
        res.status(200).send(reg);
     }else{
@@ -79,6 +90,11 @@ const obternet_direcciones_cliente = async function(req,res){
 const eliminar_direccion_cliente = async function(req,res){
     if(req.user){
        let id = req.params['id'];
+       // Verificar propiedad antes de eliminar (Broken Access Control)
+       const dir = await Direccion.findById(id);
+       if (!dir || dir.cliente.toString() !== req.user.sub.toString()) {
+           return res.status(403).send({ data: undefined, message: 'No tienes permiso para eliminar esta dirección.' });
+       }
        let direccion = await Direccion.findByIdAndRemove({_id:id});
        res.status(200).send(direccion);
     }else{
@@ -101,6 +117,7 @@ const validar_payment_id_venta = async function(req,res){
 const crear_venta_cliente = async function(req,res){
     if(req.user){
         let data = req.body;
+        data.cliente = req.user.sub; // Siempre obtener el cliente del token, nunca confiar en el body
 
         data.year = new Date().getFullYear();
         data.month = new Date().getMonth()+1;
@@ -116,6 +133,19 @@ const crear_venta_cliente = async function(req,res){
         }
         
         let venta = await Venta.create(data);
+
+        // Alerta de compras inusuales: más de 3 ventas en 10 minutos del mismo cliente
+        const ventasRecientes = await Venta.countDocuments({
+            cliente: data.cliente,
+            createdAt: { $gte: new Date(Date.now() - VENTAS_VENTANA_MS) }
+        });
+        if (ventasRecientes > VENTAS_UMBRAL) {
+            logger.security('UNUSUAL_PURCHASE_ACTIVITY', {
+                clienteId: data.cliente,
+                ventasRecientes,
+                total: data.total
+            });
+        }
 
         for(var item of data.detalles){
 

@@ -101,7 +101,7 @@
                                           <div class="col-12 col-md-6 col-xl-4" v-for="item in galeria">
                                               <div class="card">
                                                   <a href="project-overview.html">
-                                                      <img :src="$url+'/obtener_galeria_producto/'+item.imagen" alt="..." class="card-img-top">
+                                                      <img :src="$imgSrc(item.imagen, 'obtener_galeria_producto')" alt="..." class="card-img-top">
                                                   </a>
                                                   <div class="card-footer card-footer-boxed">
                                                   <div class="row">
@@ -186,7 +186,7 @@
                 }else{
                     this.data = true;
                   this.producto = result.data;
-                  this.str_image = this.$url+'/obtener_portada_producto/'+this.producto.portada;
+                  this.str_image = this.$imgSrc(this.producto.portada);
                 }
   
                 this.load_data = false;

@@ -10,6 +10,7 @@ api.get('/listar_categorias_public', publicController.listar_categorias_public);
 api.get('/obtener_producto_slug/:slug', publicController.obtener_producto_slug);
 api.get('/obtener_producto_categoria/:categoria', publicController.obtener_producto_categoria);
 api.get('/obtener_reviews_producto/:id',publicController.obtener_reviews_producto);
+api.get('/sitemap-productos.xml', publicController.sitemap_productos);
 
 
 module.exports = api;

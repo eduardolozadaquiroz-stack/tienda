@@ -238,7 +238,7 @@
   
                                                           <!-- Image -->
                                                           <div class="avatar">
-                                                          <img class="avatar-img rounded me-3" :src="$url+'/obtener_portada_producto/'+item.producto.portada" alt="...">
+                                                          <img class="avatar-img rounded me-3" :src="$imgSrc(item.producto.portada)" alt="...">
                                                           </div>
   
                                                           <div class="ms-3">

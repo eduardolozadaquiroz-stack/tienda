@@ -51,7 +51,7 @@
             <!-- Imagen + info -->
             <div class="ci-product">
               <router-link :to="{name:'show-producto', params:{slug: item.producto.slug}}" class="ci-img-link">
-                <img :src="$url+'/obtener_portada_producto/'+item.producto.portada" :alt="item.producto.titulo" class="ci-img" />
+                <img :src="$imgSrc(item.producto.portada)" :alt="item.producto.titulo" class="ci-img" />
               </router-link>
               <div class="ci-info">
                 <router-link :to="{name:'show-producto', params:{slug: item.producto.slug}}" class="ci-name">

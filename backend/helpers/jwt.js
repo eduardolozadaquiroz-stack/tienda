@@ -8,5 +8,5 @@ exports.createToken = function(usuario) {
         email: usuario.email,
         rol: usuario.rol
     };
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2d' });
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
 }

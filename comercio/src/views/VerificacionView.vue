@@ -150,19 +150,22 @@ export default {
             });
         },
         init_payment(payment_id){
-            axios.get('https://api.mercadopago.com/v1/payments/'+payment_id,{
+            // Verificación del pago a través del backend propio — el token de MP nunca está en el frontend
+            axios.get(this.$url + '/verificar_pago_mp/' + payment_id, {
                 headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer TEST-1167811298028131-010513-c32aa2ae9342431bd3ca07b90846dff1-147238555'
-                    }
-            }).then((result)=>{
-                this.pago = result.data;
-                if(this.pago.status == 'approved'){
-                    this.validar_venta(this.payment_id);
-                }else{
-                    this.msm_error = 'El pago fué aprovado';
+                    'Content-Type': 'application/json',
+                    'Authorization': this.$store.state.token
                 }
-            })
+            }).then((result) => {
+                this.pago = result.data;
+                if (this.pago.status === 'approved') {
+                    this.validar_venta(payment_id);
+                } else {
+                    this.msm_error = 'El pago no fue aprobado. Estado: ' + this.pago.status;
+                }
+            }).catch(() => {
+                this.msm_error = 'No se pudo verificar el pago. Intenta de nuevo.';
+            });
         }
     },
 }

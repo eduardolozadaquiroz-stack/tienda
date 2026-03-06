@@ -88,6 +88,21 @@ const obtener_reviews_producto = async function(req,res){
     } catch(e) { res.status(500).send({ message: 'Error interno.' }); }
 }
 
+const sitemap_productos = async function(req, res) {
+    try {
+        const productos = await Producto.find({ estado: { $in: [true, 'true'] } }).select('slug updatedAt').lean();
+        const BASE = process.env.STORE_URL || 'https://oversizemx.pages.dev';
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>';
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        for (const p of productos) {
+            const lastmod = p.updatedAt ? new Date(p.updatedAt).toISOString().split('T')[0] : '';
+            xml += `<url><loc>${BASE}/producto/${p.slug}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}<changefreq>weekly</changefreq><priority>0.8</priority></url>`;
+        }
+        xml += '</urlset>';
+        res.header('Content-Type', 'application/xml').send(xml);
+    } catch(e) { res.status(500).send({ message: 'Error interno.' }); }
+}
+
 module.exports = {
     obtener_nuevos_productos,
     obtener_productos_recomendados,
@@ -95,5 +110,6 @@ module.exports = {
     listar_categorias_public,
     obtener_producto_slug,
     obtener_producto_categoria,
-    obtener_reviews_producto
+    obtener_reviews_producto,
+    sitemap_productos
 }

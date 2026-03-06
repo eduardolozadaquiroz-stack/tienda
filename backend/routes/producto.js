@@ -2,18 +2,11 @@ var express = require('express');
 var productoController = require('../controllers/productoController');
 var authenticate = require('../middlewares/authenticate');
 var multer = require('multer');
-var pathModule = require('path');
 
-function makeStorage(folder) {
-    return multer.diskStorage({
-        destination: function(req, file, cb) { cb(null, './uploads/' + folder); },
-        filename: function(req, file, cb) { cb(null, Date.now() + pathModule.extname(file.originalname)); }
-    });
-}
-
-var uploadProducto = multer({ storage: makeStorage('productos') });
-var uploadFactura  = multer({ storage: makeStorage('facturas') });
-var uploadGaleria  = multer({ storage: makeStorage('galeria') });
+// Usamos memoryStorage: las imágenes se suben a Cloudinary desde el buffer en memoria
+var uploadProducto = multer({ storage: multer.memoryStorage() });
+var uploadFactura  = multer({ storage: multer.memoryStorage() });
+var uploadGaleria  = multer({ storage: multer.memoryStorage() });
 
 var api = express.Router();
 

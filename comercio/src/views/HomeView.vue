@@ -41,7 +41,7 @@
           <router-link v-for="item in nuevos_productos" :key="item.id" :to="{ name: 'show-producto', params: { slug: item.slug } }" class="product-card">
             <div class="product-card-img">
               <span v-if="item.descuento" class="product-badge">Oferta</span>
-              <img :src="$url + '/obtener_portada_producto/' + item.portada" :alt="item.titulo" />
+              <img :src="$imgSrc(item.portada)" :alt="item.titulo" />
               <div class="product-card-overlay"><span>Ver producto &rarr;</span></div>
             </div>
             <div class="product-card-info">
@@ -221,9 +221,24 @@ a { text-decoration: none; color: inherit; }
 <script>
 import axios from 'axios';
 import currency_formatter from 'currency-formatter';
+import { useHead } from '@vueuse/head';
 
 export default {
   name: 'HomeView',
+  setup() {
+    useHead({
+      title: 'OVERSIZE MX | Playeras Oversize para Hombre y Mujer en México',
+      meta: [
+        { name: 'description', content: 'Descubre la colección de playeras oversize para hombre y mujer en México. Diseños únicos, tallas S a XXL, envío a todo el país.' },
+        { property: 'og:title', content: 'OVERSIZE MX | Playeras Oversize en México' },
+        { property: 'og:description', content: 'Playeras oversize con diseños únicos para hombre y mujer. Envío a todo México.' },
+        { property: 'og:url', content: 'https://oversizemx.pages.dev/' },
+        { property: 'og:type', content: 'website' },
+        { name: 'twitter:title', content: 'OVERSIZE MX | Playeras Oversize en México' },
+        { name: 'twitter:description', content: 'Playeras oversize con diseños únicos para hombre y mujer. Envío a todo México.' },
+      ],
+    });
+  },
   data() {
     return {
       nuevos_productos: [],

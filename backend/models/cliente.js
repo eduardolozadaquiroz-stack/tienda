@@ -13,6 +13,10 @@ var ClienteSchema = Schema({
     genero : {type: String, required: false},
     avatar : {type: String, required: false, default: null},
 
+    // Control de intentos fallidos y bloqueo temporal
+    login_intentos : {type: Number, default: 0, select: false},
+    login_bloqueado_hasta : {type: Date, default: null, select: false},
+
     createdAt: {type: Date, default: Date.now}
 });
 module.exports = mongoose.model('cliente', ClienteSchema);

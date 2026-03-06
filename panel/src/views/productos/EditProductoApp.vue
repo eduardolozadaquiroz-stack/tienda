@@ -426,7 +426,7 @@
                                       Sin imágenes en la galería todavía
                                   </div>
                                   <div v-for="img in galeria" :key="img._id" class="col-6 col-md-3" style="position:relative;">
-                                      <img :src="$url+'/obtener_galeria_producto/'+img.imagen" style="width:100%;height:110px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6;">
+                                      <img :src="$imgSrc(img.imagen, 'obtener_galeria_producto')" style="width:100%;height:110px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6;">
                                       <button @click="eliminarGaleria(img._id)" style="position:absolute;top:4px;right:8px;background:rgba(220,53,69,0.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:14px;line-height:1;cursor:pointer;">&times;</button>
                                   </div>
                               </div>
@@ -485,7 +485,7 @@
                 }
             }).then((result)=>{
                 this.producto = result.data;
-                this.str_image = this.$url+'/obtener_portada_producto/'+this.producto.portada;
+                this.str_image = this.$imgSrc(this.producto.portada);
             });
         },
         uploadImage($event){
