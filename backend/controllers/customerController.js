@@ -8,6 +8,7 @@ var socketModule = require('../socket');
 var fs = require('fs');
 var path = require('path');
 var logger = require('../helpers/logger');
+var cloudinaryHelper = require('../helpers/cloudinary');
 
 // Umbral: más de 3 ventas del mismo cliente en 10 minutos = comportamiento inusual
 const VENTAS_UMBRAL = 3;
@@ -261,19 +262,23 @@ const obtener_perfil_cliente = async function(req, res) {
 
 const actualizar_perfil_cliente = async function(req, res) {
     if (!req.user) return res.status(401).send({ message: 'Token inválido.' });
-    const { nombres, apellidos, pais, genero } = req.body;
-    const update = { nombres, apellidos, pais, genero };
-    if (req.files && req.files['avatar'] && req.files['avatar'][0]) {
-        // eliminar avatar anterior si existe
-        const viejo = await Cliente.findById(req.user.sub);
-        if (viejo && viejo.avatar) {
-            const oldPath = './uploads/avatars/' + viejo.avatar;
-            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    try {
+        const { nombres, apellidos, pais, genero } = req.body;
+        const update = { nombres, apellidos, pais, genero };
+        if (req.files && req.files['avatar'] && req.files['avatar'][0]) {
+            // eliminar avatar anterior de Cloudinary si existe
+            const viejo = await Cliente.findById(req.user.sub);
+            if (viejo && viejo.avatar) {
+                await cloudinaryHelper.deleteByUrl(viejo.avatar);
+            }
+            const uploaded = await cloudinaryHelper.uploadBuffer(req.files['avatar'][0].buffer, 'avatars');
+            update.avatar = uploaded.secure_url;
         }
-        update.avatar = req.files['avatar'][0].filename;
+        const cliente = await Cliente.findByIdAndUpdate(req.user.sub, update, { new: true });
+        res.status(200).send(cliente);
+    } catch(err) {
+        res.status(500).send({ message: err.message || 'Error al actualizar el perfil.' });
     }
-    const cliente = await Cliente.findByIdAndUpdate(req.user.sub, update, { new: true });
-    res.status(200).send(cliente);
 };
 
 const cambiar_password_cliente = async function(req, res) {

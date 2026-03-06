@@ -215,7 +215,9 @@ export default {
           genero: c.genero || ''
         }
         if (c.avatar) {
-          this.avatarSrc = this.$url + '/obtener_avatar_cliente/' + c.avatar
+          this.avatarSrc = c.avatar
+            ? (c.avatar.startsWith('http') ? c.avatar : this.$url + '/obtener_avatar_cliente/' + c.avatar)
+            : null
         }
       } catch (e) {
         console.error(e)
@@ -236,7 +238,8 @@ export default {
     cancelarAvatar() {
       this.avatarFile = null
       const userData = JSON.parse(this.$store.state.user || '{}')
-      this.avatarSrc = userData.avatar ? this.$url + '/obtener_avatar_cliente/' + userData.avatar : null
+      const a = userData.avatar
+      this.avatarSrc = a ? (a.startsWith('http') ? a : this.$url + '/obtener_avatar_cliente/' + a) : null
     },
 
     async subirAvatar() {
@@ -249,7 +252,7 @@ export default {
         const res = await axios.put(this.$url + '/actualizar_perfil_cliente', fd, {
           headers: { Authorization: this.$store.state.token, 'Content-Type': 'multipart/form-data' }
         })
-        this.avatarSrc = this.$url + '/obtener_avatar_cliente/' + res.data.avatar
+        this.avatarSrc = res.data.avatar
         this.avatarFile = null
         // persistir en store
         const userData = JSON.parse(this.$store.state.user || '{}')

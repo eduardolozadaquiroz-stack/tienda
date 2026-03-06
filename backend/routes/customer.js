@@ -34,10 +34,7 @@ api.post('/registrar_review_cliente', cauthenticate.decodeToken, customerControl
 
 // ── PERFIL ──────────────────────────────────────────────────────────────────
 var uploadAvatar = multer({
-    storage: multer.diskStorage({
-        destination: function(req, file, cb){ cb(null, './uploads/avatars'); },
-        filename: function(req, file, cb){ cb(null, Date.now() + pathModule.extname(file.originalname)); }
-    }),
+    storage: multer.memoryStorage(),
     limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB máximo para avatares
     fileFilter: function(req, file, cb){
         const allowed = /jpeg|jpg|png|webp/;

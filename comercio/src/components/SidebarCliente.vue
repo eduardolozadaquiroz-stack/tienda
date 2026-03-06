@@ -3,7 +3,7 @@
         <div class="sb-profile">
             <div class="sb-avatar">
                 <img v-if="userData.avatar"
-                    :src="$url + '/obtener_avatar_cliente/' + userData.avatar"
+                    :src="userData.avatar.startsWith('http') ? userData.avatar : ($url + '/obtener_avatar_cliente/' + userData.avatar)"
                     alt="Avatar"
                 />
                 <span v-else class="sb-initials">{{ initials }}</span>
