@@ -1,1 +1,6 @@
+# Archivos estáticos — no redirigir al SPA
+/sitemap.xml /sitemap.xml 200
+/robots.txt /robots.txt 200
+/googlea8bbd9e440b744cd.html /googlea8bbd9e440b744cd.html 200
+# Vue SPA fallback
 /* /index.html 200
