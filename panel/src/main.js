@@ -22,7 +22,7 @@ axios.interceptors.response.use(
 const app = createApp(App)
 
 const socketUrl = process.env.VUE_APP_API_URL || 'http://localhost:4201';
-const socket = io(socketUrl, { transports: ['websocket'] });
+const socket = io(socketUrl, { transports: ['polling', 'websocket'] });
 
 const panelApiUrl = socketUrl + '/api';
 

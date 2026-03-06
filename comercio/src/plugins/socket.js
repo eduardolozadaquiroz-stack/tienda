@@ -1,6 +1,6 @@
 import SocketIO from 'socket.io-client';
 
-const socket = SocketIO(process.env.VUE_APP_API_URL || 'http://localhost:4201');
+const socket = SocketIO(process.env.VUE_APP_API_URL || 'http://localhost:4201', { transports: ['polling', 'websocket'] });
 
 export const socketPlugin = {
     install(app) {
