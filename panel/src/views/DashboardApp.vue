@@ -45,14 +45,49 @@
             </div>
           </div>
           <div class="col-6 col-md-3">
-            <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.07);border-left:4px solid #e03131;">
-              <div style="font-size:12px;color:#868e96;text-transform:uppercase;font-weight:600;letter-spacing:.5px;">Accesos rápidos</div>
-              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                <router-link to="/producto/create" style="font-size:11px;background:#e7f5ff;color:#1971c2;padding:3px 10px;border-radius:20px;text-decoration:none;font-weight:600;">+ Producto</router-link>
-                <router-link to="/ingreso/create" style="font-size:11px;background:#fff3bf;color:#e67700;padding:3px 10px;border-radius:20px;text-decoration:none;font-weight:600;">+ Ingreso</router-link>
-              </div>
+            <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 6px rgba(0,0,0,.07);border-left:4px solid #2b8a3e;">
+              <div style="font-size:12px;color:#868e96;text-transform:uppercase;font-weight:600;letter-spacing:.5px;">Ingresos del mes</div>
+              <div style="font-size:26px;font-weight:700;color:#2b8a3e;margin:6px 0 2px;">{{ formatCurrency(ingresoMes) }}</div>
+              <div style="font-size:12px;color:#adb5bd;">MXN este mes</div>
             </div>
           </div>
+        </div>
+
+        <!-- Resumen de estados de ventas -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+              <div style="font-size:11px;color:#868e96;text-transform:uppercase;font-weight:600;letter-spacing:.5px;margin-bottom:6px;">Pendientes</div>
+              <div style="font-size:28px;font-weight:700;color:#e67700;">{{ resumen.pendientes }}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+              <div style="font-size:11px;color:#868e96;text-transform:uppercase;font-weight:600;letter-spacing:.5px;margin-bottom:6px;">En camino</div>
+              <div style="font-size:28px;font-weight:700;color:#1971c2;">{{ resumen.enCamino }}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+              <div style="font-size:11px;color:#868e96;text-transform:uppercase;font-weight:600;letter-spacing:.5px;margin-bottom:6px;">Completados</div>
+              <div style="font-size:28px;font-weight:700;color:#2b8a3e;">{{ resumen.completadas }}</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+              <div style="font-size:11px;color:#868e96;text-transform:uppercase;font-weight:600;letter-spacing:.5px;margin-bottom:6px;">Cancelados</div>
+              <div style="font-size:28px;font-weight:700;color:#c92a2a;">{{ resumen.canceladas }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accesos rápidos -->
+        <div style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:13px;font-weight:600;color:#495057;margin-right:4px;">⚡ Accesos rápidos:</span>
+          <router-link to="/producto/create" style="font-size:12px;background:#e7f5ff;color:#1971c2;padding:5px 16px;border-radius:20px;text-decoration:none;font-weight:600;">+ Producto</router-link>
+          <router-link to="/ingreso/create" style="font-size:12px;background:#fff3bf;color:#e67700;padding:5px 16px;border-radius:20px;text-decoration:none;font-weight:600;">+ Ingreso</router-link>
+          <router-link to="/ventas" style="font-size:12px;background:#ebfbee;color:#2b8a3e;padding:5px 16px;border-radius:20px;text-decoration:none;font-weight:600;">Ver ventas</router-link>
+          <router-link to="/reviews" style="font-size:12px;background:#fff9db;color:#e67700;padding:5px 16px;border-radius:20px;text-decoration:none;font-weight:600;">⭐ Reseñas</router-link>
         </div>
 
         <div class="row g-4">
@@ -114,6 +149,8 @@ export default {
       colaboradores: [],
       totalProductos: 0,
       totalVentas: 0,
+      ingresoMes: 0,
+      resumen: { pendientes: 0, enCamino: 0, completadas: 0, canceladas: 0 },
     };
   },
   computed: {
@@ -156,10 +193,22 @@ export default {
         const resVentas = await axios.get(this.$url + `/obtener_ventas_admin/${inicio}/${hasta}`, { headers });
         this.totalVentas = Array.isArray(resVentas.data) ? resVentas.data.length : 0;
 
+        const resResumen = await axios.get(this.$url + '/resumen_ventas_admin', { headers });
+        if (resResumen.data) {
+          this.ingresoMes = resResumen.data.ingresoMes || 0;
+          this.resumen.pendientes  = resResumen.data.pendientes  || 0;
+          this.resumen.enCamino    = resResumen.data.enCamino    || 0;
+          this.resumen.completadas = resResumen.data.completadas || 0;
+          this.resumen.canceladas  = resResumen.data.canceladas  || 0;
+        }
+
       } catch (e) {
         this.loadColaboradores = false;
         console.error(e);
       }
+    },
+    formatCurrency(n) {
+      return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n || 0);
     }
   }
 }

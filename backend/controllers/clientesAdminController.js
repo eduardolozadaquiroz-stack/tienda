@@ -96,8 +96,28 @@ const desbloquear_cliente_admin = async function(req, res) {
     }
 };
 
+/**
+ * Detalle de un cliente: datos + historial de pedidos.
+ * GET /detalle_cliente_admin/:id
+ */
+const detalle_cliente_admin = async function(req, res) {
+    if (!req.user) return res.status(401).send({ message: 'Sin autorización' });
+    try {
+        const cliente = await Cliente.findById(req.params.id)
+            .select('+login_intentos +login_bloqueado_hasta').lean();
+        if (!cliente) return res.status(404).send({ message: 'Cliente no encontrado' });
+        const ventas = await Venta.find({ cliente: req.params.id })
+            .sort({ createdAt: -1 }).limit(50).lean();
+        res.status(200).send({ cliente, ventas });
+    } catch (e) {
+        logger.error('ERROR_DETALLE_CLIENTE', { error: e.message });
+        res.status(500).send({ message: 'Error del servidor' });
+    }
+};
+
 module.exports = {
     listar_clientes_admin,
     clientes_sospechosos_admin,
-    desbloquear_cliente_admin
+    desbloquear_cliente_admin,
+    detalle_cliente_admin
 };

@@ -213,13 +213,22 @@
                                   </div>
   
                                   <div class="card">
-                                      <div class="card-header">
-  
-                                          <!-- Title -->
-                                          <h4 class="card-header-title mb-0">
-                                              <b>Productos</b>
-                                          </h4>
-  
+                                      <div class="card-header d-flex align-items-center justify-content-between">
+                                          <h4 class="card-header-title mb-0"><b>Productos del pedido</b></h4>
+                                          <!-- Cambio de estado -->
+                                          <div class="d-flex align-items-center gap-2 flex-wrap">
+                                              <span style="font-size:12px;font-weight:600;color:#868e96;">Estado:</span>
+                                              <button v-for="e in estadosDisponibles" :key="e.valor"
+                                                  @click="actualizarEstado(e.valor)"
+                                                  :disabled="actualizandoEstado || venta.estado === e.valor"
+                                                  class="btn btn-sm"
+                                                  :style="venta.estado === e.valor ? e.styleActivo : e.styleInactivo">
+                                                  {{ e.label }}
+                                              </button>
+                                          </div>
+                                      </div>
+                                      <div v-if="msm_estado" class="px-4 pt-2">
+                                          <div class="alert alert-success py-2 mb-0" style="font-size:13px;border-radius:8px;">{{ msm_estado }}</div>
                                       </div>
                                       <div class="table-responsive">
                                           <table class="table table-sm table-nowrap card-table">
@@ -293,7 +302,15 @@
     data() {
       return {
           venta: {},
-          detalles: []
+          detalles: [],
+          actualizandoEstado: false,
+          msm_estado: '',
+          estadosDisponibles: [
+              { valor: 'PENDIENTE',   label: '🟡 Pendiente',  styleActivo: 'background:#fff3bf;color:#7d5a00;border:1px solid #fcc419;border-radius:20px;font-size:11px;font-weight:700;cursor:default', styleInactivo: 'background:#f8f9fa;color:#495057;border:1px solid #dee2e6;border-radius:20px;font-size:11px;' },
+              { valor: 'EN_CAMINO',  label: '🔵 En camino',  styleActivo: 'background:#d0ebff;color:#1864ab;border:1px solid #74c0fc;border-radius:20px;font-size:11px;font-weight:700;cursor:default', styleInactivo: 'background:#f8f9fa;color:#495057;border:1px solid #dee2e6;border-radius:20px;font-size:11px;' },
+              { valor: 'COMPLETADO', label: '🟢 Completado', styleActivo: 'background:#ebfbee;color:#1a5c2a;border:1px solid #8ce99a;border-radius:20px;font-size:11px;font-weight:700;cursor:default', styleInactivo: 'background:#f8f9fa;color:#495057;border:1px solid #dee2e6;border-radius:20px;font-size:11px;' },
+              { valor: 'CANCELADO',  label: '🔴 Cancelado',  styleActivo: 'background:#fff5f5;color:#c92a2a;border:1px solid #ffc9c9;border-radius:20px;font-size:11px;font-weight:700;cursor:default', styleInactivo: 'background:#f8f9fa;color:#495057;border:1px solid #dee2e6;border-radius:20px;font-size:11px;' },
+          ]
       }
     },
     beforeMount() {
@@ -310,6 +327,22 @@
              this.venta = result.data.venta;
              this.detalles = result.data.detalles;
           });
+      },
+      async actualizarEstado(nuevoEstado) {
+          this.actualizandoEstado = true;
+          try {
+              const res = await axios.put(this.$url + '/actualizar_estado_venta_admin/' + this.venta._id,
+                  { estado: nuevoEstado },
+                  { headers: { 'Authorization': this.$store.state.token } }
+              );
+              this.venta = res.data;
+              this.msm_estado = '✅ Estado actualizado: ' + nuevoEstado;
+              setTimeout(() => { this.msm_estado = ''; }, 3000);
+          } catch {
+              this.msm_estado = '❌ No se pudo actualizar el estado.';
+          } finally {
+              this.actualizandoEstado = false;
+          }
       },
        convertCurrency(number){
             const n = parseFloat(number) || 0;

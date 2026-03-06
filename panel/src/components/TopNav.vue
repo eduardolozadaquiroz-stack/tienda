@@ -1,6 +1,6 @@
 <template>
-   <nav class="navbar navbar-expand-md navbar-light d-none d-md-flex">
-  <div class="container-fluid">
+   <nav class="navbar navbar-expand-md navbar-light d-none d-md-flex" style="position:relative;z-index:1030;overflow:visible;">
+  <div class="container-fluid" style="overflow:visible;">
 
   <!-- Saludo -->
   <form class="form-inline me-4 d-none d-md-flex">
@@ -14,12 +14,12 @@
       <div class="dropdown">
         <a href="#" class="avatar avatar-sm avatar-online dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <img v-if="avatarUrl" :src="avatarUrl" alt="avatar" class="avatar-img rounded-circle" style="-webkit-mask-image: none;object-fit:cover;">
-            <div v-else class="avatar-img rounded-circle d-flex align-items-center justify-content-center"
+            <div v-else class="rounded-circle d-flex align-items-center justify-content-center"
               style="background:#4c6ef5;color:#fff;font-weight:700;font-size:14px;width:100%;height:100%;">
               {{ iniciales }}
             </div>
         </a>
-        <div class="dropdown-menu dropdown-menu-end" style="min-width:240px;">
+        <div class="dropdown-menu dropdown-menu-end" style="min-width:240px;z-index:1050;position:absolute;">
             <!-- Cabecera usuario -->
             <div style="padding:14px 16px 12px;border-bottom:1px solid #f1f3f5;">
               <div style="display:flex;align-items:center;gap:12px;">
@@ -59,9 +59,12 @@ import axios from 'axios';
 export default {
   name: 'TopNav',
   data() {
-    return { avatarUrl: null };
+    return { avatarUrlLocal: null };
   },
   computed: {
+    avatarUrl() {
+      return this.$store.state.avatarUrl || this.avatarUrlLocal;
+    },
     usuarioId() {
       try { return jwt_decode(this.$store.state.token).sub; } catch { return null; }
     },
@@ -91,7 +94,11 @@ export default {
     usuarioRol() {
       try {
         const decoded = jwt_decode(this.$store.state.token);
-        return decoded.rol === 'ADMIN' ? '👑 Administrador' : '👤 Colaborador';
+        const rol = (decoded.rol || '').toLowerCase();
+        if (rol.includes('admin')) return '👑 Administrador';
+        if (rol.includes('vendedor')) return '🛒 Vendedor';
+        if (rol.includes('almacen') || rol.includes('inventor')) return '📦 Almacén';
+        return '👤 Colaborador';
       } catch { return ''; }
     }
   },
@@ -103,8 +110,10 @@ export default {
         const res = await axios.get(this.$url + '/obtener_usuario_admin/' + this.usuarioId, {
           headers: { 'Authorization': this.$store.state.token }
         });
-        if (res.data && res.data.avatar) {
-          this.avatarUrl = this.$imgSrc(res.data.avatar, 'obtener_avatar_usuario');
+        // Solo usar si es URL de Cloudinary; los filenames locales apuntan a default.jpg
+        if (res.data && res.data.avatar && res.data.avatar.startsWith('http')) {
+          this.avatarUrlLocal = res.data.avatar;
+          this.$store.commit('setAvatarUrl', res.data.avatar);
         }
       } catch { /* silencioso */ }
     },

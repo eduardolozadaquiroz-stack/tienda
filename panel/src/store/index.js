@@ -3,12 +3,16 @@ import { createStore } from 'vuex'
 export default createStore({
   state: {
     token: localStorage.getItem('token'),
+    avatarUrl: null,
   },
   getters: {
   },
   mutations: {
     setToken(state, token){
       state.token = token;
+    },
+    setAvatarUrl(state, url){
+      state.avatarUrl = url;
     }
   },
   actions: {
@@ -18,6 +22,7 @@ export default createStore({
     },
     logout({commit}){
           commit('setToken',null);
+          commit('setAvatarUrl',null);
           localStorage.clear();
     }
   },

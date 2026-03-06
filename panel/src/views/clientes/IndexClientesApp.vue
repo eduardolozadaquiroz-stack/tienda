@@ -121,12 +121,17 @@
                       <span v-else style="color:#adb5bd;font-size:12px;">✓ OK</span>
                     </td>
                     <td style="padding:12px 16px;text-align:center;">
-                      <button v-if="c.bloqueado || c.login_intentos >= 3"
-                        @click="desbloquear(c)"
-                        style="background:#4c6ef5;color:#fff;border:none;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;">
-                        Desbloquear
-                      </button>
-                      <span v-else style="color:#adb5bd;font-size:12px;">—</span>
+                      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+                        <router-link :to="'/clientes/'+c._id"
+                          style="background:#e7f5ff;color:#1971c2;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;text-decoration:none;">
+                          Ver
+                        </router-link>
+                        <button v-if="c.bloqueado || c.login_intentos >= 3"
+                          @click="desbloquear(c)"
+                          style="background:#4c6ef5;color:#fff;border:none;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;">
+                          Desbloquear
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 </tbody>

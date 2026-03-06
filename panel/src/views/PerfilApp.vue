@@ -30,7 +30,7 @@
             <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;">
               <!-- Avatar actual / preview -->
               <div style="position:relative;flex-shrink:0;cursor:pointer;" @click="$refs.inputAvatar.click()" title="Clic para cambiar foto">
-                <div v-if="!perfil.avatar && !previewAvatar"
+                <div v-if="(!perfil.avatar || !perfil.avatar.startsWith('http')) && !previewAvatar"
                   style="width:100px;height:100px;border-radius:50%;background:#4c6ef5;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:#fff;cursor:pointer;"
                   @click="$refs.inputAvatar.click()">
                   {{ iniciales }}
@@ -38,7 +38,7 @@
                 <img v-if="previewAvatar" :src="previewAvatar"
                   style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #4c6ef5;cursor:pointer;"
                   @click="$refs.inputAvatar.click()" alt="preview">
-                <img v-if="perfil.avatar && !previewAvatar" :src="$imgSrc(perfil.avatar, 'obtener_avatar_usuario')"
+                <img v-if="perfil.avatar && perfil.avatar.startsWith('http') && !previewAvatar" :src="perfil.avatar"
                   style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #4c6ef5;cursor:pointer;"
                   @click="$refs.inputAvatar.click()" alt="avatar">
                 <!-- Ícono cámara encima -->
@@ -224,9 +224,10 @@ export default {
       formData.append('avatar', this.avatarFile);
       try {
         const res = await axios.post(this.$url + '/subir_avatar_usuario_admin/' + this.usuarioId, formData, {
-          headers: { 'Authorization': this.$store.state.token, 'Content-Type': 'multipart/form-data' }
+          headers: { 'Authorization': this.$store.state.token }
         });
         this.perfil.avatar = res.data.avatar;
+        this.$store.commit('setAvatarUrl', res.data.avatar);
         this.avatarFile = null;
         this.previewAvatar = null;
         this.msm_avatar = '✅ Foto de perfil actualizada correctamente.';

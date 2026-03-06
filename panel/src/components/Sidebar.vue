@@ -106,6 +106,11 @@
                 <i class="fe fe-shopping-bag"></i> Ventas
               </router-link>
           </li>
+          <li class="nav-item">
+              <router-link to="/reviews" class="nav-link" active-class="active">
+                <i class="fe fe-star"></i> Reseñas
+              </router-link>
+          </li>
         </ul>
 
         <hr class="navbar-divider my-3">

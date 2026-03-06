@@ -31,6 +31,10 @@ const routes = [
 
   // Clientes
   {path: '/clientes',name: 'clientes-index',component: ()=> import('@/views/clientes/IndexClientesApp.vue'), meta: { requiresAuth: true}},
+  {path: '/clientes/:id',name: 'cliente-detalle',component: ()=> import('@/views/clientes/DetalleClienteApp.vue'), meta: { requiresAuth: true}},
+
+  // Reseñas
+  {path: '/reviews',name: 'reviews',component: ()=> import('@/views/reviews/ReviewsApp.vue'), meta: { requiresAuth: true}},
 
   // Seguridad — logs
   {path: '/seguridad/logs',name: 'seguridad-logs',component: ()=> import('@/views/seguridad/LogsSeguridadApp.vue'), meta: { requiresAuth: true}},

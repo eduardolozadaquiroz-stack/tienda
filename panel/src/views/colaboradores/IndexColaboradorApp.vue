@@ -30,7 +30,7 @@
 
                         <!-- Stats -->
                         <div class="row g-3 mb-4">
-                            <div class="col-6 col-md-3">
+                            <div class="col-6 col-md-4">
                                 <div class="card border-0 shadow-sm" style="border-radius:12px">
                                     <div class="card-body py-3">
                                         <p class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Total</p>
@@ -38,7 +38,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-6 col-md-3">
+                            <div class="col-6 col-md-4">
                                 <div class="card border-0 shadow-sm" style="border-radius:12px">
                                     <div class="card-body py-3">
                                         <p class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Activos</p>
@@ -46,19 +46,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-6 col-md-3">
+                            <div class="col-6 col-md-4">
                                 <div class="card border-0 shadow-sm" style="border-radius:12px">
                                     <div class="card-body py-3">
                                         <p class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Inactivos</p>
                                         <h3 class="mb-0 text-danger" style="font-weight:700">{{ colaboradores.filter(c=>!c.estado).length }}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="card border-0 shadow-sm" style="border-radius:12px">
-                                    <div class="card-body py-3">
-                                        <p class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Página</p>
-                                        <h3 class="mb-0" style="font-weight:700">{{ currentPage }} / {{ totalPages }}</h3>
                                     </div>
                                 </div>
                             </div>

@@ -88,6 +88,11 @@
                                 <h4 class="card-header-title mb-0">
                                     <b>Ventas realizadas</b>
                                 </h4>
+                                <button v-if="ventas.length > 0" @click="exportarCSV()"
+                                    class="btn btn-sm btn-outline-success ms-auto"
+                                    style="border-radius:20px;font-weight:600;">
+                                    <i class="fe fe-download me-1"></i> Exportar CSV
+                                </button>
 
                             </div>
                             <div class="table-responsive">
@@ -193,29 +198,40 @@ export default {
     methods:{
         init_data(){
             if(!this.inicio){
-                this.$notify({
-                    group: 'foo',
-                    title: 'ERROR',
-                    text: 'Ingrese la fecha de inicio',
-                    type: 'error'
-                });
+                this.$notify({ group: 'foo', title: 'ERROR', text: 'Ingrese la fecha de inicio', type: 'error' });
             }else if(!this.hasta){
-                this.$notify({
-                    group: 'foo',
-                    title: 'ERROR',
-                    text: 'Ingrese la segunda fecha',
-                    type: 'error'
-                });
+                this.$notify({ group: 'foo', title: 'ERROR', text: 'Ingrese la segunda fecha', type: 'error' });
             }else{
                 axios.get(this.$url+'/obtener_ventas_admin/'+this.inicio+'/'+this.hasta,{
-                    headers:{
-                            'Content-Type': 'application/json',
-                            'Authorization': this.$store.state.token,
-                    }
-                }).then((result)=>{
-                    this.ventas = result.data;
-                });
+                    headers:{ 'Content-Type': 'application/json', 'Authorization': this.$store.state.token }
+                }).then((result)=>{ this.ventas = result.data; });
             }
+        },
+        exportarCSV() {
+            if (!this.ventas.length) return;
+            const cols = ['Serie','Cliente','Email','Total','Envio','Gran Total','Estado','Fecha'];
+            const rows = this.ventas.map(v => [
+                '#' + String(v.serie).padStart(6,'0'),
+                v.cliente?.nombres || '',
+                v.cliente?.email || '',
+                v.total,
+                v.envio,
+                (v.total + v.envio).toFixed(2),
+                v.estado,
+                v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-MX') : ''
+            ]);
+            let csv = '\uFEFF' + cols.join(',') + '\n';
+            rows.forEach(r => { csv += r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',') + '\n'; });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'ventas_' + this.inicio + '_' + this.hasta + '.csv';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         },
           convertCurrency(number){
           const n = parseFloat(number) || 0;

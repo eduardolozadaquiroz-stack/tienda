@@ -13,6 +13,7 @@ var ProductoSchema = Schema({
     str_variedad : {type: String, required: true},
     estado : {type: Boolean, required: true},
     descuento : {type: Boolean, required: true},
+    precio_descuento : {type: Number, default: 0},
     personalizable : {type: Boolean, default: false, required: false},
     updatedAt: {type: Date,required:false},
     createdAt: {type: Date, default: Date.now}
