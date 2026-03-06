@@ -77,8 +77,6 @@ export default {
         this.estado = this.$route.params.estado;
         this.payment_id = this.$route.query.payment_id;
 
-        this.init_carrito();
-
         let user_data = JSON.parse(this.$store.state.user);
    
         this.venta.transaccion = this.payment_id;
@@ -90,14 +88,17 @@ export default {
             this.venta.direccion = this.direccion;
         }else{
             this.msm_error = 'No se obtuvo el código de la dirección';
+            return;
         }
 
-        this.init_payment(this.payment_id);
-
+        // Esperar carrito antes de verificar el pago para evitar crear_venta con detalles vacíos
+        this.init_carrito().then(() => {
+            this.init_payment(this.payment_id);
+        });
     },
     methods: {
         init_carrito(){
-            axios.get(this.$url+'/obtener_carrito_cliente',{
+            return axios.get(this.$url+'/obtener_carrito_cliente',{
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': this.$store.state.token

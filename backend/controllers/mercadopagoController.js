@@ -45,6 +45,9 @@ const crear_preferencia = async function(req, res) {
 
     const STORE_URL = process.env.STORE_URL || 'https://oversizemx.pages.dev';
 
+    // Cuotas máximas (puedes cambiar a 3, 6, 12, 18 o 24)
+    const MAX_CUOTAS = parseInt(process.env.MP_MAX_CUOTAS) || 3;
+
     const payload = {
         items,
         back_urls: {
@@ -52,7 +55,16 @@ const crear_preferencia = async function(req, res) {
             pending: `${STORE_URL}/verificacion/pending`,
             failure: `${STORE_URL}/verificacion/failure`
         },
-        auto_return: 'approved'
+        auto_return: 'approved',
+        // Solo tarjetas de crédito y débito — excluye efectivo y transferencias
+        payment_methods: {
+            excluded_payment_types: [
+                { id: 'ticket' },       // OXXO y similares
+                { id: 'atm' },          // cajeros
+                { id: 'bank_transfer' } // SPEI
+            ],
+            installments: MAX_CUOTAS   // máximo de meses sin intereses a mostrar
+        }
     };
 
     try {
