@@ -45,4 +45,7 @@ api.delete('/eliminar_subcategoria_admin/:id', authenticate.decodeToken, product
 api.put('/cambiar_estado_producto_admin/:id', authenticate.decodeToken, productoController.cambiar_estado_producto_admin);
 api.delete('/eliminar_producto_admin/:id', authenticate.decodeToken, productoController.eliminar_producto_admin);
 
+api.get('/productos_bajo_stock_admin', authenticate.decodeToken, productoController.productos_bajo_stock_admin);
+api.get('/top_productos_admin', authenticate.decodeToken, productoController.top_productos_admin);
+
 module.exports = api;

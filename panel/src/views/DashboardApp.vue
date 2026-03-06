@@ -81,6 +81,21 @@
           </div>
         </div>
 
+        <!-- Alerta de stock bajo -->
+        <div v-if="bajoStock.length > 0"
+          style="background:#fff5f5;border:1px solid #ffc9c9;border-radius:12px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;">⚠️</span>
+            <div>
+              <div style="font-weight:700;color:#c92a2a;font-size:14px;">{{ bajoStock.length }} producto{{ bajoStock.length > 1 ? 's' : '' }} con stock bajo (≤5 unidades)</div>
+              <div style="font-size:12px;color:#868e96;margin-top:2px;">
+                {{ bajoStock.slice(0,3).map(p => p.titulo).join(', ') }}{{ bajoStock.length > 3 ? ` y ${bajoStock.length - 3} más...` : '' }}
+              </div>
+            </div>
+          </div>
+          <router-link to="/reportes" style="background:#c92a2a;color:#fff;border-radius:20px;padding:6px 18px;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;">Ver reportes →</router-link>
+        </div>
+
         <!-- Accesos rápidos -->
         <div style="background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07);margin-bottom:24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
           <span style="font-size:13px;font-weight:600;color:#495057;margin-right:4px;">⚡ Accesos rápidos:</span>
@@ -151,6 +166,7 @@ export default {
       totalVentas: 0,
       ingresoMes: 0,
       resumen: { pendientes: 0, enCamino: 0, completadas: 0, canceladas: 0 },
+      bajoStock: [],
     };
   },
   computed: {
@@ -201,6 +217,10 @@ export default {
           this.resumen.completadas = resResumen.data.completadas || 0;
           this.resumen.canceladas  = resResumen.data.canceladas  || 0;
         }
+        try {
+          const resStock = await axios.get(this.$url + '/productos_bajo_stock_admin?umbral=5', { headers });
+          this.bajoStock = resStock.data?.data || [];
+        } catch (_) { /* silencioso */ }
 
       } catch (e) {
         this.loadColaboradores = false;

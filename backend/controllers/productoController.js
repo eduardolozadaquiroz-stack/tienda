@@ -669,6 +669,59 @@ const obtener_detalles_ingreso_admin = async function(req,res){
     }
 }
 
+/**
+ * GET /productos_bajo_stock_admin?umbral=5
+ * Productos cuyo stock total (propio + suma variedades) sea <= umbral
+ */
+const productos_bajo_stock_admin = async function(req, res) {
+    if (!req.user) return res.status(500).send({ data: undefined, message: 'ErrorToken' });
+    const umbral = Math.max(0, parseInt(req.query.umbral) || 5);
+    try {
+        const Variedad = require('../models/variedad');
+        // Sumar stock por producto desde variedades
+        const stockPorVariedad = await Variedad.aggregate([
+            { $group: { _id: '$producto', stockTotal: { $sum: '$stock' } } }
+        ]);
+        const stockMap = {};
+        stockPorVariedad.forEach(v => { stockMap[String(v._id)] = v.stockTotal; });
+
+        const productos = await Producto.find({ estado: true }).lean();
+        const bajoStock = productos
+            .map(p => ({ ...p, stock_efectivo: stockMap[String(p._id)] ?? p.stock }))
+            .filter(p => p.stock_efectivo <= umbral)
+            .sort((a, b) => a.stock_efectivo - b.stock_efectivo);
+
+        res.status(200).send({ data: bajoStock, umbral, total: bajoStock.length });
+    } catch (e) {
+        res.status(500).send({ data: undefined, message: 'Error del servidor' });
+    }
+};
+
+/**
+ * GET /top_productos_admin?limit=10
+ * Top productos más vendidos (por cantidad de unidades) en los últimos 90 días
+ */
+const top_productos_admin = async function(req, res) {
+    if (!req.user) return res.status(500).send({ data: undefined, message: 'ErrorToken' });
+    const limit = Math.min(20, parseInt(req.query.limit) || 10);
+    try {
+        const VentaDetalle = require('../models/venta_detalle');
+        const hace90 = new Date(); hace90.setDate(hace90.getDate() - 90);
+        const top = await VentaDetalle.aggregate([
+            { $match: { createdAt: { $gte: hace90 } } },
+            { $group: { _id: '$producto', total_vendido: { $sum: '$cantidad' }, ingresos: { $sum: '$subtotal' } } },
+            { $sort: { total_vendido: -1 } },
+            { $limit: limit },
+            { $lookup: { from: 'productos', localField: '_id', foreignField: '_id', as: 'producto' } },
+            { $unwind: '$producto' },
+            { $project: { _id: 1, total_vendido: 1, ingresos: 1, titulo: '$producto.titulo', portada: '$producto.portada', precio: '$producto.precio' } }
+        ]);
+        res.status(200).send(top);
+    } catch (e) {
+        res.status(500).send({ data: undefined, message: 'Error del servidor' });
+    }
+};
+
 module.exports = {
     registro_producto_admin,
     listar_productos_admin,
@@ -692,5 +745,7 @@ module.exports = {
     obtener_ingresos_admin,
     obtener_comprobante_ingreso,
     obtener_detalles_ingreso_admin,
-    eliminar_producto_admin
+    eliminar_producto_admin,
+    productos_bajo_stock_admin,
+    top_productos_admin
 }

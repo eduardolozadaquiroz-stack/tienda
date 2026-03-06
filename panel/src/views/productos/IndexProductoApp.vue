@@ -147,10 +147,17 @@
                                                           </div>
                                                           <div class="col-auto">
                                                               <span><b>{{convertCurrency(item.precio)}}</b></span>
-  
                                                           </div>
                                                           <div class="col-auto">
-  
+                                                              <span v-if="item.stock === 0"
+                                                                style="background:#fff5f5;color:#c92a2a;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;">⛔ Sin stock</span>
+                                                              <span v-else-if="item.stock <= 5"
+                                                                style="background:#fff5f5;color:#c92a2a;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;">⚠️ {{ item.stock }} u.</span>
+                                                              <span v-else-if="item.stock <= 10"
+                                                                style="background:#fff3bf;color:#e67700;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap;">📦 {{ item.stock }} u.</span>
+                                                          </div>
+                                                          <div class="col-auto">
+
                                                               <!-- Dropdown -->
                                                               <div class="dropdown">
                                                               <a href="#" class="dropdown-ellipses dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

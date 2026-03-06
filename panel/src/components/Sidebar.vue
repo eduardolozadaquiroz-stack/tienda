@@ -111,6 +111,16 @@
                 <i class="fe fe-star"></i> Reseñas
               </router-link>
           </li>
+          <li class="nav-item">
+              <router-link to="/cupones" class="nav-link" active-class="active">
+                <i class="fe fe-percent"></i> Cupones
+              </router-link>
+          </li>
+          <li class="nav-item">
+              <router-link to="/reportes" class="nav-link" active-class="active">
+                <i class="fe fe-bar-chart-2"></i> Reportes
+              </router-link>
+          </li>
         </ul>
 
         <hr class="navbar-divider my-3">

@@ -36,6 +36,12 @@ const routes = [
   // Reseñas
   {path: '/reviews',name: 'reviews',component: ()=> import('@/views/reviews/ReviewsApp.vue'), meta: { requiresAuth: true}},
 
+  // Cupones
+  {path: '/cupones',name: 'cupones',component: ()=> import('@/views/cupones/CuponesApp.vue'), meta: { requiresAuth: true}},
+
+  // Reportes
+  {path: '/reportes',name: 'reportes',component: ()=> import('@/views/reportes/ReportesApp.vue'), meta: { requiresAuth: true}},
+
   // Seguridad — logs
   {path: '/seguridad/logs',name: 'seguridad-logs',component: ()=> import('@/views/seguridad/LogsSeguridadApp.vue'), meta: { requiresAuth: true}},
 ]
