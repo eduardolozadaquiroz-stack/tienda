@@ -12,5 +12,5 @@ Disallow: /login
 
 # Sitemap estático (páginas principales)
 Sitemap: https://oversizemx.pages.dev/sitemap.xml
-# Sitemap dinámico de productos — reemplaza TU-BACKEND por tu dominio en Render
-Sitemap: https://TU-BACKEND.onrender.com/api/sitemap-productos.xml
+# Sitemap dinámico de productos (generado por el backend con todos los slugs)
+Sitemap: https://tienda-n75h.onrender.com/api/sitemap-productos.xml

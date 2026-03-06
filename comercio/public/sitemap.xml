@@ -5,30 +5,39 @@
   <!-- Página principal -->
   <url>
     <loc>https://oversizemx.pages.dev/</loc>
+    <lastmod>2026-03-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Tienda -->
+  <!-- Tienda general -->
   <url>
     <loc>https://oversizemx.pages.dev/shop</loc>
+    <lastmod>2026-03-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Categorías -->
+  <!-- Categoría: Hombre -->
   <url>
     <loc>https://oversizemx.pages.dev/shop?categoria=HOMBRE</loc>
+    <lastmod>2026-03-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Categoría: Mujer -->
   <url>
     <loc>https://oversizemx.pages.dev/shop?categoria=MUJER</loc>
+    <lastmod>2026-03-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Categoría: Personalizadas -->
   <url>
     <loc>https://oversizemx.pages.dev/shop?categoria=PERSONALIZADAS</loc>
+    <lastmod>2026-03-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
