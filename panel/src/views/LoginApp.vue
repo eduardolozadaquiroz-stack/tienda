@@ -11,64 +11,39 @@
 
                 <!-- Subheading -->
                 <p class="text-muted text-center mb-5">
-                   Panel administrador
+                    Panel administrador
                 </p>
 
                 <!-- Form -->
-                <form>
+                <form @submit.prevent="validar()">
 
                     <div v-if="msm_error" class="alert alert-danger" role="alert">
-                        {{msm_error}}
+                        {{ msm_error }}
                     </div>
-
 
                     <!-- Email address -->
                     <div class="form-group">
-
-                    <!-- Label -->
-                    <label class="form-label">
-                        Correo eletrónico
-                    </label>
-
-                    <!-- Input -->
-                    <input type="email" class="form-control" v-model="email" placeholder="juan@gmail.com">
-
+                        <label class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control" v-model="email" placeholder="juan@gmail.com" autocomplete="email">
                     </div>
 
                     <!-- Password -->
                     <div class="form-group">
-                    <div class="row">
-                        <div class="col">
+                        <label class="form-label">Contraseña</label>
 
-                        <!-- Label -->
-                        <label class="form-label">
-                            Contraseña
-                        </label>
-
+                        <!-- Input group con ojo funcional -->
+                        <div class="input-group input-group-merge">
+                            <input class="form-control" v-model="password" :type="mostrarPassword ? 'text' : 'password'" placeholder="Ingrese su contraseña" autocomplete="current-password">
+                            <span class="input-group-text" style="cursor:pointer;" @click="mostrarPassword = !mostrarPassword">
+                                <i :class="mostrarPassword ? 'fe fe-eye-off' : 'fe fe-eye'"></i>
+                            </span>
                         </div>
-                      
-                    </div> <!-- / .row -->
-
-                    <!-- Input group -->
-                    <div class="input-group input-group-merge">
-
-                        <!-- Input -->
-                        <input class="form-control" v-model="password" type="password" placeholder="Ingrese su contraseña">
-
-                        <!-- Icon -->
-                        <span class="input-group-text">
-                        <i class="fe fe-eye"></i>
-                        </span>
-
-                    </div>
                     </div>
 
                     <!-- Submit -->
-                    <button class="btn btn-lg w-100 btn-primary mb-3" type="button" v-on:click="validar()">
+                    <button class="btn btn-lg w-100 btn-primary mb-3" type="submit">
                         Ingresar
                     </button>
-
-         
 
                 </form>
 
@@ -89,7 +64,8 @@ export default {
       return {
           email: '',
           password: '',
-          msm_error: ''
+          msm_error: '',
+          mostrarPassword: false
       }
   },
   created() {

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- Botón flotante para reabrir el tour -->
-    <button v-if="!visible && mostrarBoton" @click="abrirTour()"
+    <!-- Botón flotante para reabrir el tour (oculto en login) -->
+    <button v-if="!visible && mostrarBoton && !esLoginPage" @click="abrirTour()"
       title="Ayuda / Tutorial"
       style="position:fixed;bottom:28px;right:28px;z-index:9999;width:48px;height:48px;border-radius:50%;background:#4c6ef5;color:#fff;border:none;box-shadow:0 4px 16px rgba(76,110,245,.4);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:transform .2s;"
       @mouseenter="$event.target.style.transform='scale(1.1)'"
@@ -259,7 +259,14 @@ export default {
       ]
     };
   },
+  computed: {
+    esLoginPage() {
+      return this.$route && this.$route.name === 'login';
+    }
+  },
   mounted() {
+    // No mostrar tour ni botón en la página de login
+    if (this.esLoginPage) return;
     const visto = localStorage.getItem('tour_visto');
     this.mostrarBoton = true;
     if (!visto) {
