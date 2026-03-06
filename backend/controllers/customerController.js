@@ -68,10 +68,14 @@ const eliminar_producto_carrito = async function(req,res){
 
 const crear_direccion_cliente = async function(req,res){
     if(req.user){
-       let data = req.body;
-       data.cliente = req.user.sub;
-       let direccion = await Direccion.create(data);
-       res.status(200).send(direccion);
+       try {
+           let data = req.body;
+           data.cliente = req.user.sub;
+           let direccion = await Direccion.create(data);
+           res.status(200).send(direccion);
+       } catch(err) {
+           res.status(400).send({data: undefined, message: err.message || 'Error al guardar la dirección.'});
+       }
     }else{
         res.status(500).send({data:undefined,message: 'ErrorToken'});
     }
