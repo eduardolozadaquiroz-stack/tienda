@@ -269,6 +269,8 @@ a { text-decoration: none; color: inherit; }
                 }
 
                
+            }).catch((err)=>{
+                console.error('Error al cargar productos de la tienda:', err);
             });
             this.init_categorias();
         },

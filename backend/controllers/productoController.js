@@ -25,7 +25,13 @@ const registro_producto_admin = async function(req,res){
             res.status(200).send({data:undefined,message: 'El titulo del producto ya existe.'});   
         }else{
             //REGISTRO PRODUCTO
-            var uploadResult = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+            let uploadResult;
+            try {
+                uploadResult = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+            } catch (cloudErr) {
+                logger.error('CLOUDINARY_ERROR', { error: cloudErr.message });
+                return res.status(500).send({ data: undefined, message: 'No se pudo subir la imagen. Verifica las credenciales de Cloudinary.' });
+            }
             var str_portada = uploadResult.secure_url;
 
             ///
@@ -34,6 +40,7 @@ const registro_producto_admin = async function(req,res){
             data.slug = slugify(data.titulo);
             data.estado   = data.estado   === 'true' || data.estado   === true;
             data.descuento = data.descuento === 'true' || data.descuento === true;
+            data.personalizable = data.personalizable === 'true' || data.personalizable === true;
             
             try {
                 let producto = await Producto.create(data);
@@ -135,7 +142,13 @@ const actualizar_producto_admin = async function(req,res){
             if(productos[0]._id == id){
                 if(req.files && req.files['portada']){
                     //REGISTRO PRODUCTO
-                    var uploadResult1 = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+                    let uploadResult1;
+                    try {
+                        uploadResult1 = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+                    } catch (cloudErr) {
+                        logger.error('CLOUDINARY_ERROR', { error: cloudErr.message });
+                        return res.status(500).send({ data: undefined, message: 'No se pudo subir la imagen. Verifica las credenciales de Cloudinary.' });
+                    }
                     var str_portada = uploadResult1.secure_url;
     
                     ///
@@ -187,7 +200,13 @@ const actualizar_producto_admin = async function(req,res){
         }else{
             if(req.files && req.files['portada']){
                 //REGISTRO PRODUCTO
-                var uploadResult2 = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+                let uploadResult2;
+                try {
+                    uploadResult2 = await cloudinaryHelper.uploadBuffer(req.files['portada'][0].buffer, 'productos');
+                } catch (cloudErr) {
+                    logger.error('CLOUDINARY_ERROR', { error: cloudErr.message });
+                    return res.status(500).send({ data: undefined, message: 'No se pudo subir la imagen. Verifica las credenciales de Cloudinary.' });
+                }
                 var str_portada = uploadResult2.secure_url;
 
                 ///

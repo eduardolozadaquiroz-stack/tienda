@@ -13,6 +13,10 @@ const socketModule = require('./socket');
 
 var app = express();
 
+// Render (y otras plataformas cloud) usan un proxy inverso que añade X-Forwarded-For.
+// Sin esto, express-rate-limit no puede identificar IPs reales y lanza ValidationError.
+app.set('trust proxy', 1);
+
 // ── Seguridad: headers HTTP ──────────────────────────────────────
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // permite servir imágenes al frontend
@@ -93,6 +97,10 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Access-Control-Allow-Request-Method');
     res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
     res.header('Allow', 'GET, PUT, POST, DELETE, OPTIONS');
+    // Responder al preflight CORS con 204 para que el navegador permita la petición real
+    if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+    }
     next();
 });
 
