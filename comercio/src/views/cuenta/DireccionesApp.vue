@@ -35,10 +35,6 @@
               <input class="df-input" type="text" placeholder="Ramírez" v-model="direccion.apellidos" />
             </div>
             <div class="df-group">
-              <label class="df-label">Documento / ID</label>
-              <input class="df-input" type="text" placeholder="123456789" v-model="direccion.documento" />
-            </div>
-            <div class="df-group">
               <label class="df-label">Teléfono</label>
               <input class="df-input" type="text" placeholder="(+52) 55 1234 5678" v-model="direccion.telefono" />
             </div>
@@ -170,7 +166,6 @@ export default {
     crear_direccion() {
       if (!this.direccion.nombres)   return (this.msm_error = 'Ingrese los nombres por favor.');
       if (!this.direccion.apellidos) return (this.msm_error = 'Ingrese los apellidos por favor.');
-      if (!this.direccion.documento) return (this.msm_error = 'Ingrese el documento por favor.');
       if (!this.direccion.telefono)  return (this.msm_error = 'Ingrese el teléfono por favor.');
       if (!this.direccion.pais)      return (this.msm_error = 'Seleccione el país por favor.');
       if (!this.direccion.ciudad)    return (this.msm_error = 'Ingrese la ciudad por favor.');

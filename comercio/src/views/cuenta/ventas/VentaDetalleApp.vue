@@ -201,7 +201,7 @@
                             <h6 class="text-uppercase mb-0">Dirección de entrega</h6>
                           </div>
                           <div class="block-body bg-light pt-1" style="background: #fff6e8 !important">
-                            <p>{{venta.direccion.nombres}} {{venta.direccion.apellidos}}<br>{{venta.direccion.telefono}}<br>{{venta.direccion.documento}}<br>{{venta.direccion.zip}} {{venta.direccion.pais}}<br>{{venta.direccion.ciudad}}<br>{{venta.direccion.direccion}}</p>
+                            <p>{{venta.direccion.nombres}} {{venta.direccion.apellidos}}<br>{{venta.direccion.telefono}}<br>{{venta.direccion.zip}} {{venta.direccion.pais}}<br>{{venta.direccion.ciudad}}<br>{{venta.direccion.direccion}}</p>
                           </div>
                         </div>
                       </div>

@@ -4,7 +4,6 @@ var Schema = mongoose.Schema;
 var DireccionSchema = Schema({
     nombres : {type: String, required: true},
     apellidos : {type: String, required: true},
-    documento : {type: String, required: true},
     telefono : {type: String, required: true},
     pais : {type: String, required: true},
     ciudad : {type: String, required: true},
