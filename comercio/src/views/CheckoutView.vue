@@ -239,8 +239,15 @@ export default {
         // En producción usar init_point, en sandbox usar sandbox_init_point
         const url = result.data.init_point || result.data.sandbox_init_point;
         window.location.href = url;
-      }).catch(() => {
-        this.pay_error = 'Ocurrió un error al procesar el pago. Intenta de nuevo.';
+      }).catch((err) => {
+        const detail = err.response?.data?.detail;
+        let msg = 'Ocurrió un error al procesar el pago. Intenta de nuevo.';
+        if (detail) {
+          if (typeof detail === 'string') msg = detail;
+          else if (detail.message) msg = detail.message;
+          else msg = JSON.stringify(detail);
+        }
+        this.pay_error = msg;
         this.procesando = false;
       });
     }

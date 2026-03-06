@@ -84,8 +84,12 @@ const crear_preferencia = async function(req, res) {
             sandbox_init_point: data.sandbox_init_point
         });
     } catch (error) {
-        logger.error('MP_PREFERENCE_ERROR', { error: error.message, clienteId: req.user.sub });
-        res.status(500).send({ message: 'No se pudo crear la preferencia de pago.' });
+        const mpError = error.response?.data;
+        logger.error('MP_PREFERENCE_ERROR', { error: error.message, mpResponse: mpError, clienteId: req.user.sub });
+        res.status(500).send({
+            message: 'No se pudo crear la preferencia de pago.',
+            detail: mpError || error.message
+        });
     }
 };
 
