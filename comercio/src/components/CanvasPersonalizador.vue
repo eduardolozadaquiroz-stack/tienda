@@ -134,7 +134,7 @@ export default {
       this.canvas = new fabric.Canvas(this.$refs.fabricEl, {
         width: size,
         height: size,
-        backgroundColor: '#f8f8f8',
+        backgroundColor: 'transparent',
         preserveObjectStacking: true
       });
 
