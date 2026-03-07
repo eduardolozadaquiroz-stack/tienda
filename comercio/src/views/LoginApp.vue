@@ -44,6 +44,7 @@
             </div>
 
             <div class="lf-error" v-if="msm_error_login">{{ msm_error_login }}</div>
+            <div class="lf-success" v-if="msm_success">{{ msm_success }}</div>
 
             <button class="lf-btn" type="button" @click="login()">Ingresar</button>
 
