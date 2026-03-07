@@ -426,6 +426,8 @@ export default {
                         this.msm_error = result.data.message;
                     }else{
                         this.msm_error = '';
+                        this.$store.dispatch('saveToken', result.data.token);
+                        this.$store.dispatch('saveUser', JSON.stringify(result.data.cliente));
                         this.msm_success = '✓ ¡Cuenta creada exitosamente! Redirigiendo a la tienda...';
                         setTimeout(() => {
                             this.$router.push({ name: 'home' });
@@ -456,13 +458,19 @@ export default {
                     if(result.data.message){
                         this.msm_error_login = result.data.message;
                     }else{
+                        this.msm_error_login = '';
+                        this.msm_success = '¡Bienvenido!';
                         this.$store.dispatch('saveToken',result.data.token);
                         this.$store.dispatch('saveUser',JSON.stringify(result.data.cliente));
-                        this.$router.push({name: 'home'}); 
-                        this.$socket.emit('send_cart',true);
+                        setTimeout(() => {
+                            this.$router.push({name: 'home'});
+                            this.$socket.emit('send_cart',true);
+                        }, 800);
                     }
 
                 }).catch((error)=>{
+                    const msg = error.response?.data?.message || 'Error al iniciar sesión, intenta de nuevo.';
+                    this.msm_error_login = msg;
                 });
             }
         }

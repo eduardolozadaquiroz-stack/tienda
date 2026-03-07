@@ -39,7 +39,7 @@ const registro_cliente_ecommerce = async function(req, res) {
             let cliente = await Cliente.create(data);
             // Nunca devolver el hash al frontend
             const { password: _, ...clienteSafe } = cliente.toObject();
-            res.status(200).send(clienteSafe);
+            res.status(200).send({ token: jwt.createToken(cliente), cliente: clienteSafe });
         } catch (error) {
             res.status(500).send({ message: 'No se pudo crear la cuenta.' });
         }

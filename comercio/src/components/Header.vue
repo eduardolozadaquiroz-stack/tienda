@@ -50,7 +50,7 @@
                     </router-link>
                     <a v-if="$store.state.token" class="navbar-icon-link dropdown" >
                         <img src="/assets/icons/user.png" style="width: 25px;" />
-                          <span class="text-sm ms-2 ms-lg-0 text-uppercase text-sm fw-bold d-none d-sm-inline dropdown-toggle" data-bs-target="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> &nbsp; {{user.nombres.split(' ')[0]}}
+                          <span class="text-sm ms-2 ms-lg-0 text-uppercase text-sm fw-bold d-none d-sm-inline dropdown-toggle" data-bs-target="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> &nbsp; {{user && user.nombres ? user.nombres.split(' ')[0] : ''}}
 
                         </span>
                         <div class="dropdown-menu dropdown-menu-animated" aria-labelledby="categoryDropdownMenuLink" style="    left: -50px !important;">
@@ -176,7 +176,6 @@ export default {
   name: 'Header',
   data() {
     return {
-      user: JSON.parse(this.$store.state.user),
       carrito: [],
       total: 0,
       carrito_length : 0,
@@ -186,6 +185,10 @@ export default {
   computed: {
     isShopSection() {
       return ['shop', 'show-producto'].includes(this.$route.name);
+    },
+    user() {
+      try { return this.$store.state.user ? JSON.parse(this.$store.state.user) : null; }
+      catch(e) { return null; }
     }
   },
   methods: {
@@ -217,15 +220,26 @@ export default {
         });
       }
     },
-  click_event(){
+    click_event(){
       this.$socket.emit('emit_method', 'Hola socket');
+    },
+    closeNavbar() {
+      const navbar = document.getElementById('navbarCollapse');
+      if (navbar && navbar.classList.contains('show')) {
+        navbar.classList.remove('show');
+      }
+    }
+  },
+
+  watch: {
+    $route() {
+      this.closeNavbar();
     }
   },
 
   created() {
     this.sockets.subscribe('listen_cart', (data) => {
         this.init_carrito();
-        this.user = JSON.parse(this.$store.state.user);
     });
   },  
   
