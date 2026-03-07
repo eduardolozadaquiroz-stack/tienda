@@ -1,54 +1,58 @@
 <template>
     <div>
-        <section class="hero" v-if="estado == 'pending' || estado == 'failure'"  style="margin-top: 8rem !important;">
-            <div class="container">
-                <!-- Breadcrumbs -->
+        <!-- FAILURE -->
+        <section class="hero" v-if="estado == 'failure'" style="margin-top: 8rem !important;">
+            <div class="container text-center">
                 <ol class="breadcrumb justify-content-center">
-                    <li class="breadcrumb-item">
-                        <router-link to="/">Inicio</router-link>
-                    </li>
+                    <li class="breadcrumb-item"><router-link to="/">Inicio</router-link></li>
                 </ol>
-                <!-- Hero Content-->
-                <div class="hero-content pb-5 text-center">
-                <h1 class="mb-5">Pago incorrecto</h1>
-                <div class="row">   
-                    <div class="col-xl-8 offset-xl-2"><p class="lead mb-0">As am hastily invited settled at limited civilly fortune me. Really spring in extent an by. Judge but built party world. Of so am he remember although required. Bachelor unpacked be advanced at. Confined in declared marianne is vicinity. </p></div>
-                </div>
+                <div class="hero-content pb-5">
+                    <div class="mb-4" style="font-size:64px;">❌</div>
+                    <h1 class="mb-3">Pago rechazado</h1>
+                    <p class="lead text-muted mb-4">Tu pago no pudo procesarse. Puedes intentarlo de nuevo con otra tarjeta o método de pago.</p>
+                    <router-link to="/checkout" class="btn btn-dark me-2">Intentar de nuevo</router-link>
+                    <router-link to="/cart" class="btn btn-outline-dark">Ver carrito</router-link>
                 </div>
             </div>
         </section>
 
-        <section class="hero" v-if="estado == 'success'"  style="margin-top: 8rem !important;">
-            <div class="container" v-if="!msm_error">
-                <!-- Breadcrumbs -->
+        <!-- PENDING -->
+        <section class="hero" v-if="estado == 'pending'" style="margin-top: 8rem !important;">
+            <div class="container text-center">
                 <ol class="breadcrumb justify-content-center">
-                    <li class="breadcrumb-item">
-                        <router-link to="/">Inicio</router-link>
-                    </li>
+                    <li class="breadcrumb-item"><router-link to="/">Inicio</router-link></li>
                 </ol>
-                <!-- Hero Content-->
-                <div class="hero-content pb-5 text-center">
-                <h1 class="mb-5">Validando pago...</h1>
-                <div class="row">   
-                    <div class="col-xl-8 offset-xl-2">
-                        <img src="/assets/media/reloj.gif" style="width: 80px;">
-                    </div>
-                </div>
+                <div class="hero-content pb-5">
+                    <div class="mb-4" style="font-size:64px;">⏳</div>
+                    <h1 class="mb-3">Pago pendiente</h1>
+                    <p class="lead text-muted mb-4">Tu pago está siendo procesado. Te notificaremos por correo cuando se confirme.</p>
+                    <router-link to="/" class="btn btn-dark">Volver al inicio</router-link>
                 </div>
             </div>
-            <div class="container" v-if="msm_error">
-                <!-- Breadcrumbs -->
-                <ol class="breadcrumb justify-content-center">
-                    <li class="breadcrumb-item">
-                        <router-link to="/">Inicio</router-link>
-                    </li>
-                </ol>
-                <!-- Hero Content-->
-                <div class="hero-content pb-5 text-center">
-                <h1 class="mb-5">{{msm_error}}</h1>
-                <div class="row">   
-                    <div class="col-xl-8 offset-xl-2"><p class="lead mb-0">As am hastily invited settled at limited civilly fortune me. Really spring in extent an by. Judge but built party world. Of so am he remember although required. Bachelor unpacked be advanced at. Confined in declared marianne is vicinity. </p></div>
+        </section>
+
+        <!-- SUCCESS procesando -->
+        <section class="hero" v-if="estado == 'success' && !msm_error && !venta_creada" style="margin-top: 8rem !important;">
+            <div class="container text-center">
+                <div class="hero-content pb-5">
+                    <img src="/assets/media/reloj.gif" style="width: 80px;" class="mb-4">
+                    <h1 class="mb-3">Validando pago...</h1>
+                    <p class="text-muted">Por favor espera, estamos confirmando tu pedido.</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- SUCCESS error -->
+        <section class="hero" v-if="estado == 'success' && msm_error" style="margin-top: 8rem !important;">
+            <div class="container text-center">
+                <ol class="breadcrumb justify-content-center">
+                    <li class="breadcrumb-item"><router-link to="/">Inicio</router-link></li>
+                </ol>
+                <div class="hero-content pb-5">
+                    <div class="mb-4" style="font-size:64px;">⚠️</div>
+                    <h1 class="mb-3">{{ msm_error }}</h1>
+                    <p class="lead text-muted mb-4">Si tu pago fue cobrado, contáctanos con el número de transacción.</p>
+                    <router-link to="/" class="btn btn-dark">Volver al inicio</router-link>
                 </div>
             </div>
         </section>
@@ -70,11 +74,16 @@ export default {
             venta: {},
             detalles: [],
             total: 0,
-            carrito: []
+            carrito: [],
+            venta_creada: false
         }
     },
     beforeMount() {
         this.estado = this.$route.params.estado;
+
+        // Si no es success, no hacer nada más
+        if (this.estado !== 'success') return;
+
         this.payment_id = this.$route.query.payment_id;
 
         let user_data = JSON.parse(this.$store.state.user);
@@ -146,6 +155,7 @@ export default {
                      'Authorization': this.$store.state.token
                 }
             }).then((result)=>{
+                this.venta_creada = true;
                 this.$router.push({name:'venta',params:{id:result.data._id}});
                 this.$socket.emit('send_cart',true);
             });
