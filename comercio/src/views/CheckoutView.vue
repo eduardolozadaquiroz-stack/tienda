@@ -114,40 +114,31 @@
             <span>Subtotal ({{ productos.length }} art{{ productos.length === 1 ? 'ículo' : 'ículos' }})</span>
             <span>{{ convertCurrency(total) }}</span>
           </div>
-          <div class="sum-row">
-            <span>Envío</span>
-            <span>{{ convertCurrency($envio) }}</span>
-          </div>
           <div class="sum-divider"></div>
           <div class="sum-row sum-total">
             <span>Total</span>
-            <span>{{ convertCurrency(total + $envio) }}</span>
+            <span>{{ convertCurrency(total) }}</span>
           </div>
         </div>
 
         <!-- PAGO -->
         <div class="co-card pay-card">
-          <p class="pay-label">Método de pago</p>
-          <p class="pay-method">Tarjeta de crédito o débito</p>
-          <img src="/assets/media/payments.png" class="pay-logos" alt="Métodos de pago" />
-          <p class="pay-note">
-            Al hacer clic en "Pagar ahora" serás redirigido a Mercado Pago de forma segura para completar tu compra.
-          </p>
+          <div class="co-card-title" style="margin-bottom:20px">
+            <span class="co-step">4</span>
+            Pago con tarjeta
+          </div>
 
           <div class="pay-error" v-if="pay_error">{{ pay_error }}</div>
+          <div class="pay-success" v-if="pay_success">{{ pay_success }}</div>
 
-          <button
-            class="btn-pay"
-            @click="crearPreferencia()"
-            :disabled="procesando"
-          >
-            <span v-if="!procesando">
-              🔒 Pagar ahora — {{ convertCurrency(total + $envio) }}
-            </span>
-            <span v-else class="pay-spinner"></span>
-          </button>
+          <!-- El Brick de MP se renderiza aquí -->
+          <div v-if="brick_loading" class="brick-loading">
+            <span class="pay-spinner dark"></span>
+            <span>Cargando formulario seguro...</span>
+          </div>
+          <div id="cardPaymentBrick_container"></div>
 
-          <p class="pay-terms">
+          <p class="pay-terms" style="margin-top:14px">
             Al pagar aceptas nuestros <a href="#">Términos y condiciones</a> y la <a href="#">Política de privacidad</a>.
           </p>
         </div>
@@ -170,14 +161,21 @@ export default {
       productos: [],
       total: 0,
       load_data: true,
-      items: [],
-      procesando: false,
-      pay_error: ''
+      pay_error: '',
+      pay_success: '',
+      brick_loading: true,
+      brickController: null,
+      mp_public_key: null
     };
   },
   beforeMount() {
     this.init_direcciones();
     this.init_carrito();
+  },
+  beforeUnmount() {
+    if (this.brickController) {
+      this.brickController.unmount();
+    }
   },
   methods: {
     convertCurrency(number) {
@@ -202,53 +200,113 @@ export default {
           headers: { 'Content-Type': 'application/json', 'Authorization': this.$store.state.token }
         }).then((result) => {
           this.total = 0;
-          this.items = [];
           for (var item of result.data.carrito_general) {
             this.total += item.producto.precio * item.cantidad;
-            this.items.push({
-              title: item.producto.titulo,
-              quantity: item.cantidad,
-              unit_price: item.producto.precio,
-              currency_id: 'MXN'
-            });
           }
-          this.items.push({ title: 'Envío', quantity: 1, unit_price: this.$envio, currency_id: 'MXN' });
           this.productos = result.data.carrito_general;
           this.load_data = false;
+          // Cargar la public key y luego el Brick
+          this.cargar_public_key();
         });
       }
     },
-    crearPreferencia() {
-      this.pay_error = '';
-      if (!this.venta.direccion) {
-        this.pay_error = 'Por favor selecciona una dirección de entrega.';
+    cargar_public_key() {
+      axios.get(this.$url + '/mp_public_key').then((result) => {
+        this.mp_public_key = result.data.public_key;
+        this.cargar_sdk_y_brick();
+      }).catch(() => {
+        this.pay_error = 'No se pudo inicializar el formulario de pago.';
+        this.brick_loading = false;
+      });
+    },
+    cargar_sdk_y_brick() {
+      // Si el SDK ya está cargado, inicializar directamente
+      if (window.MercadoPago) {
+        this.init_brick();
         return;
       }
-      this.procesando = true;
+      const script = document.createElement('script');
+      script.src = 'https://sdk.mercadopago.com/js/v2';
+      script.onload = () => this.init_brick();
+      script.onerror = () => {
+        this.pay_error = 'No se pudo cargar el SDK de pago.';
+        this.brick_loading = false;
+      };
+      document.head.appendChild(script);
+    },
+    async init_brick() {
+      const mp = new window.MercadoPago(this.mp_public_key, { locale: 'es-MX' });
+      const bricksBuilder = mp.bricks();
+      const self = this;
 
-      // La llamada va al BACKEND propio — el token de MP nunca toca el frontend
-      axios.post(this.$url + '/crear_preferencia_mp', {
-        items: this.items,
-        direccion: this.venta.direccion
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': this.$store.state.token
+      this.brickController = await bricksBuilder.create('cardPayment', 'cardPaymentBrick_container', {
+        initialization: {
+          amount: self.total
+        },
+        customization: {
+          paymentMethods: {
+            maxInstallments: parseInt(process.env.VUE_APP_MP_MAX_CUOTAS) || 3
+          },
+          visual: {
+            style: {
+              theme: 'default',
+              customVariables: {
+                formBackgroundColor: '#ffffff',
+                baseColor: '#111111'
+              }
+            },
+            hideFormTitle: true,
+            hidePaymentButton: false
+          }
+        },
+        callbacks: {
+          onReady: () => {
+            self.brick_loading = false;
+          },
+          onSubmit: (formData) => {
+            return new Promise((resolve, reject) => {
+              self.pay_error = '';
+              self.pay_success = '';
+
+              if (!self.venta.direccion) {
+                self.pay_error = 'Por favor selecciona una dirección de entrega.';
+                reject();
+                return;
+              }
+
+              axios.post(self.$url + '/procesar_pago_mp', {
+                ...formData,
+                transaction_amount: self.total,
+                direccion: self.venta.direccion
+              }, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': self.$store.state.token
+                }
+              }).then((result) => {
+                const { status, payment_id, direccion } = result.data;
+                resolve();
+                if (status === 'approved') {
+                  self.$router.push({ path: `/verificacion/success/${direccion}`, query: { payment_id } });
+                } else if (status === 'pending' || status === 'in_process') {
+                  self.$router.push({ path: '/verificacion/pending', query: { payment_id } });
+                } else {
+                  self.$router.push({ path: '/verificacion/failure' });
+                }
+              }).catch((err) => {
+                const detail = err.response?.data?.detail;
+                let msg = 'Error al procesar el pago. Intenta de nuevo.';
+                if (detail && typeof detail === 'string') msg = detail;
+                else if (detail?.message) msg = detail.message;
+                self.pay_error = msg;
+                reject();
+              });
+            });
+          },
+          onError: (error) => {
+            console.error('MP Brick error:', error);
+          }
         }
-      }).then((result) => {
-        // En producción usar init_point, en sandbox usar sandbox_init_point
-        const url = result.data.init_point || result.data.sandbox_init_point;
-        window.location.href = url;
-      }).catch((err) => {
-        const detail = err.response?.data?.detail;
-        let msg = 'Ocurrió un error al procesar el pago. Intenta de nuevo.';
-        if (detail) {
-          if (typeof detail === 'string') msg = detail;
-          else if (detail.message) msg = detail.message;
-          else msg = JSON.stringify(detail);
-        }
-        this.pay_error = msg;
-        this.procesando = false;
       });
     }
   }
@@ -504,4 +562,19 @@ a { text-decoration: none; color: inherit; }
 
 .pay-terms { font-size: 11px; color: #bbb; text-align: center; margin: 0; line-height: 1.5; }
 .pay-terms a { color: #888; text-decoration: underline; }
+
+.brick-loading {
+  display: flex; align-items: center; gap: 10px;
+  color: #888; font-size: 13px; padding: 20px 0;
+}
+.pay-spinner.dark {
+  border-color: rgba(0,0,0,.15);
+  border-top-color: #111;
+}
+.pay-success {
+  background: #f0fdf4; color: #16a34a;
+  font-size: 12px; padding: 10px 14px;
+  border-radius: 8px; margin-bottom: 14px;
+  border: 1px solid #86efac;
+}
 </style>

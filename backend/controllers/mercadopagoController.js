@@ -141,4 +141,88 @@ const verificar_pago = async function(req, res) {
     }
 };
 
-module.exports = { crear_preferencia, verificar_pago };
+/**
+ * GET /api/mp_public_key
+ * Devuelve la Public Key de MP para que el Brick pueda tokenizar la tarjeta.
+ * La Public Key NO es secreta — es seguro exponerla al frontend.
+ */
+const get_public_key = function(req, res) {
+    const publicKey = process.env.MP_PUBLIC_KEY;
+    if (!publicKey) {
+        return res.status(500).send({ message: 'MP_PUBLIC_KEY no configurada.' });
+    }
+    res.status(200).send({ public_key: publicKey });
+};
+
+/**
+ * POST /api/procesar_pago_mp
+ * Recibe el formData del Card Payment Brick (token de tarjeta + datos del pago),
+ * crea el pago en MercadoPago y devuelve el resultado.
+ */
+const procesar_pago = async function(req, res) {
+    if (!req.user) return res.status(401).send({ message: 'ErrorToken' });
+
+    const { token, payment_method_id, transaction_amount, installments, payer, direccion } = req.body;
+
+    // Validaciones básicas
+    if (!token || !payment_method_id || !transaction_amount || !payer || !direccion) {
+        return res.status(400).send({ message: 'Faltan datos del pago.' });
+    }
+    if (typeof transaction_amount !== 'number' || transaction_amount <= 0) {
+        return res.status(400).send({ message: 'Monto inválido.' });
+    }
+    if (!payer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payer.email)) {
+        return res.status(400).send({ message: 'Email del pagador inválido.' });
+    }
+
+    const STORE_URL = process.env.STORE_URL || 'https://oversizemx.pages.dev';
+
+    const payload = {
+        token,
+        payment_method_id,
+        transaction_amount,
+        installments: installments || 1,
+        payer: {
+            email: payer.email,
+            identification: payer.identification || undefined
+        },
+        notification_url: `${STORE_URL}/api/mp_webhook`,
+        statement_descriptor: 'OVERSIZE MX',
+        capture: true
+    };
+
+    try {
+        const { data } = await axios.post(`${MP_BASE}/v1/payments`, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`,
+                'X-Idempotency-Key': `${req.user.sub}-${Date.now()}`
+            },
+            timeout: 15000
+        });
+
+        logger.info('MP_PAYMENT_CREATED', {
+            clienteId: req.user.sub,
+            paymentId: data.id,
+            status: data.status,
+            amount: data.transaction_amount
+        });
+
+        res.status(200).send({
+            status: data.status,              // 'approved', 'pending', 'rejected'
+            status_detail: data.status_detail,
+            payment_id: data.id,
+            transaction_amount: data.transaction_amount,
+            direccion
+        });
+    } catch (error) {
+        const mpError = error.response?.data;
+        logger.error('MP_PAYMENT_ERROR', { error: error.message, mpResponse: mpError, clienteId: req.user.sub });
+        res.status(500).send({
+            message: 'No se pudo procesar el pago.',
+            detail: mpError || error.message
+        });
+    }
+};
+
+module.exports = { crear_preferencia, verificar_pago, get_public_key, procesar_pago };
