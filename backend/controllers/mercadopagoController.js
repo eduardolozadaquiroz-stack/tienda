@@ -184,6 +184,8 @@ const procesar_pago = async function(req, res) {
         installments: installments || 1,
         payer: {
             email: payer.email,
+            first_name: payer.first_name || undefined,
+            last_name: payer.last_name || undefined,
             identification: payer.identification || undefined
         },
         notification_url: `${STORE_URL}/api/mp_webhook`,
