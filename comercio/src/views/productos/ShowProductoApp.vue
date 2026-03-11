@@ -201,7 +201,7 @@
         </div>
         <div class="tab-pane" id="reviews" role="tabpanel">
           <div class="row mb-5">
-            <div class="col-lg-10 col-xl-9" v-if="reviews.length == 0">
+            <div class="col-lg-10 col-xl-9" v-if="reviews.length >= 1">
               <div class="review d-flex" v-for="item in reviews">
                 <div class="flex-shrink-0 text-center me-4 me-xl-5"><img class="review-image" src="https://d19m59y37dris4.cloudfront.net/sell/2-0/img/person-1.jpg" alt="Han Solo"><span class="text-uppercase text-muted">Dec 2018</span></div>
                 <div>
@@ -261,7 +261,7 @@
               </div>
          
             </div>
-               <div class="col-lg-10 col-xl-9" v-if="reviews.length >= 1">
+               <div class="col-lg-10 col-xl-9" v-if="reviews.length == 0">
               <div class="row">
                   <div class="col-sm-8 col-md-5 text-center mb-md-0 mb-4 pb-md-0 pb-3 mx-auto">
                     <img class="mb-3 mt-5" src="/assets/media/taza-de-cafe.gif" width="120" alt="Customer Support">

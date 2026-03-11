@@ -80,6 +80,7 @@
                       <button class="vd-btn-send" @click="enviar_review(item.detalle.producto._id)">Enviar</button>
                     </div>
                     <p v-if="msm_error" class="vd-error">{{ msm_error }}</p>
+                    <p v-if="msm_success" class="vd-success">{{ msm_success }}</p>
                   </div>
                 </div>
               </div>
@@ -140,8 +141,9 @@ export default {
       acceso: false,
       load_data: true,
       stars: 3,
-      review: { estrellas: 3 },
-      msm_error : '',
+      review: { estrellas: 3, comentario: '' },
+      msm_error: '',
+      msm_success: '',
     }
   },
   components: {
@@ -176,18 +178,28 @@ export default {
         return currency_formatter.format(number, { code: 'MXN' });
     },
     enviar_review(id){
+      this.msm_error = '';
+      this.msm_success = '';
       if(!this.review.comentario){
         this.msm_error = 'Ingrese un comentario';
       }else{
         this.review.producto = id;
-         axios.post(this.$url+'/registrar_review_cliente',this.review,{
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': this.$store.state.token
-              }
-          }).then((result)=>{
-              
-          });
+        axios.post(this.$url+'/registrar_review_cliente',this.review,{
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': this.$store.state.token
+            }
+        }).then((result)=>{
+            if(result.data.message){
+              this.msm_error = result.data.message;
+            } else {
+              this.msm_success = '¡Reseña enviada con éxito!';
+              this.review = { estrellas: 3, comentario: '' };
+              this.init_venta();
+            }
+        }).catch(()=>{
+            this.msm_error = 'Error al enviar la reseña, intenta de nuevo.';
+        });
       }
     }
   }
@@ -229,6 +241,7 @@ export default {
 .vd-input { flex:1; border:1px solid #ddd; border-radius:8px; padding:9px 12px; font-size:14px; }
 .vd-btn-send { background:#111; color:#fff; border:none; border-radius:8px; padding:9px 18px; font-size:13px; cursor:pointer; white-space:nowrap; }
 .vd-error { color:#e53e3e; font-size:13px; margin:0; }
+.vd-success { color:#38a169; font-size:13px; margin:0; }
 .vd-summary-row { display:flex; justify-content:space-between; font-size:14px; padding:8px 0; border-bottom:1px solid #f0f0f0; color:#555; }
 .vd-summary-row:last-child { border-bottom:none; }
 .vd-summary-row.total { font-size:15px; color:#111; padding-top:12px; }
