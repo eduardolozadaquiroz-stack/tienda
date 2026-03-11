@@ -10,6 +10,7 @@
                     <div class="mb-4" style="font-size:64px;">❌</div>
                     <h1 class="mb-3">Pago rechazado</h1>
                     <p class="lead text-muted mb-4">Tu pago no pudo procesarse. Puedes intentarlo de nuevo con otra tarjeta o método de pago.</p>
+                    <p v-if="status_detail" class="text-muted" style="font-size:12px;font-family:monospace">Detalle: {{ status_detail }}</p>
                     <router-link to="/checkout" class="btn btn-dark me-2">Intentar de nuevo</router-link>
                     <router-link to="/cart" class="btn btn-outline-dark">Ver carrito</router-link>
                 </div>
@@ -68,6 +69,7 @@ export default {
         return {
             estado: '',
             payment_id: '',
+            status_detail: '',
             pago: {},
             direccion: '',
             msm_error: '',
@@ -80,6 +82,7 @@ export default {
     },
     beforeMount() {
         this.estado = this.$route.params.estado;
+        this.status_detail = this.$route.query.status_detail || '';
 
         // Si no es success, no hacer nada más
         if (this.estado !== 'success') return;

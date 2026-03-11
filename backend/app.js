@@ -46,6 +46,7 @@ var public_router = require('./routes/public');
 var customer_router = require('./routes/customer');
 var venta_router = require('./routes/venta');
 var mercadopago_router = require('./routes/mercadopago');
+var stripe_router = require('./routes/stripe');
 var cupon_router = require('./routes/cupon');
 
 // Rate limiter para login — 5 intentos en 15 min (luego la cuenta se bloquea en BD)
@@ -118,6 +119,7 @@ app.use('/api', public_router);
 app.use('/api', customer_router);
 app.use('/api', venta_router);
 app.use('/api', mercadopago_router);
+app.use('/api', stripe_router);
 app.use('/api', cupon_router);
 
 // OWASP #5: Protección contra parámetros no esperados — bloquear rutas no definidas
