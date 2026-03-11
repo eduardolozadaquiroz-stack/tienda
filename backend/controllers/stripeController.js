@@ -63,4 +63,36 @@ const crear_payment_intent = async function(req, res) {
     }
 };
 
-module.exports = { get_publishable_key, crear_payment_intent };
+/**
+ * GET /api/verificar_pago_stripe/:payment_intent_id
+ * Verifica el estado del PaymentIntent en Stripe.
+ */
+const verificar_pago_stripe = async function(req, res) {
+    if (!req.user) return res.status(401).send({ message: 'ErrorToken' });
+
+    const { payment_intent_id } = req.params;
+    if (!payment_intent_id) return res.status(400).send({ message: 'ID de pago requerido.' });
+
+    try {
+        const stripe = getStripe();
+        const paymentIntent = await stripe.paymentIntents.retrieve(payment_intent_id);
+
+        logger.info('STRIPE_PAYMENT_VERIFIED', {
+            clienteId: req.user.sub,
+            paymentIntentId: paymentIntent.id,
+            status: paymentIntent.status
+        });
+
+        res.status(200).send({
+            status: paymentIntent.status,
+            amount: paymentIntent.amount / 100,
+            currency: paymentIntent.currency,
+            direccion: paymentIntent.metadata?.direccion || null
+        });
+    } catch (error) {
+        logger.error('STRIPE_PAYMENT_VERIFY_ERROR', { error: error.message, clienteId: req.user.sub });
+        res.status(500).send({ message: 'No se pudo verificar el pago.', detail: error.message });
+    }
+};
+
+module.exports = { get_publishable_key, crear_payment_intent, verificar_pago_stripe };

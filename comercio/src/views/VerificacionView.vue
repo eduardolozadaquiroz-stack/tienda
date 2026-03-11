@@ -164,15 +164,15 @@ export default {
             });
         },
         init_payment(payment_id){
-            // Verificación del pago a través del backend propio — el token de MP nunca está en el frontend
-            axios.get(this.$url + '/verificar_pago_mp/' + payment_id, {
+            // Verificar el pago con Stripe a través del backend
+            axios.get(this.$url + '/verificar_pago_stripe/' + payment_id, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': this.$store.state.token
                 }
             }).then((result) => {
                 this.pago = result.data;
-                if (this.pago.status === 'approved') {
+                if (this.pago.status === 'succeeded') {
                     this.validar_venta(payment_id);
                 } else {
                     this.msm_error = 'El pago no fue aprobado. Estado: ' + this.pago.status;
