@@ -14,7 +14,7 @@ const obtener_ventas_admin = async function(req, res) {
                 $gte: new Date(inicio + 'T00:00:00'),
                 $lt: new Date(hasta + 'T00:00:00'),
             }
-        });
+        }).populate('cliente');
         res.status(200).send(ventas);
     } else {
         res.status(500).send({ data: undefined, message: 'ErrorToken' });
