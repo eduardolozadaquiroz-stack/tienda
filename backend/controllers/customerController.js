@@ -23,9 +23,18 @@ const crear_producto_carrito = async function(req,res){
 
         if(data.cantidad <= variedad.stock){
             if(variedad.producto.precio >= 1){
-                // Agregar imagen de diseño si se subió
+                // Agregar imagen de diseño si se subió — subir a Cloudinary para persistencia
                 if(req.files && req.files['imagen_diseno'] && req.files['imagen_diseno'][0]){
-                    data.imagen_diseno = req.files['imagen_diseno'][0].filename;
+                    try {
+                        const result = await cloudinaryHelper.uploadBuffer(
+                            req.files['imagen_diseno'][0].buffer,
+                            'diseños'
+                        );
+                        data.imagen_diseno = result.secure_url;
+                    } catch(e) {
+                        // Si falla Cloudinary, continuar sin imagen
+                        data.imagen_diseno = '';
+                    }
                 }
                 let carrito = await Carrito.create(data);
                 res.status(200).send(carrito);

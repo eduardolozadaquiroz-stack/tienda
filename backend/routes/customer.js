@@ -5,10 +5,7 @@ var multer = require('multer');
 var pathModule = require('path');
 
 var uploadDiseno = multer({
-    storage: multer.diskStorage({
-        destination: function(req, file, cb){ cb(null, './uploads/diseños'); },
-        filename: function(req, file, cb){ cb(null, Date.now() + pathModule.extname(file.originalname)); }
-    }),
+    storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB máximo
     fileFilter: function(req, file, cb){
         const allowed = /jpeg|jpg|png|webp/;
