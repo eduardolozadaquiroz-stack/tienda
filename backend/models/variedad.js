@@ -7,6 +7,8 @@ var VariedadSchema = Schema({
     sku : {type: String, required: true},
     stock : {type: Number,default: 0, required: true},
     producto : {type: Schema.ObjectId, ref: 'producto', required: true},
+    color_nombre : {type: String, default: '', required: false},
+    color_hex : {type: String, default: '', required: false},
     createdAt: {type: Date, default: Date.now}
 });
 module.exports = mongoose.model('variedad',VariedadSchema);
